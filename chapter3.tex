@@ -1,36 +1,25 @@
-\chapter{Making a bibliography}
-\label{cha:bib}
-Whenever you wish to refer to books or articles relevant to your report
-you should use a citation such as \cite{lamport}. You can also force
-entries to appear in the bibliography without  a citation appearing in
-the document, by using \verb=\nocite=.  
+\chapter{Evaluation}
+\label{cha:eval}
 
-%% This nocite produces 2 entries in the bibliography
-\nocite{boyle,rd-only} 
 
-Each document cited must have an entry in a \textsf{.bib} file. For this
-document we have only one, called \textsf{refs.bib}. These files are
-listed in the \verb=\bibliography= command at the end of
-\textsf{report.tex}. Note that the \textsf{.bib} files can (and often
-do) contain many more entries than are actually cited in a partcular
-document; the only ones that appear in the bibliography are those that
-have been referenced using \verb=\cite= or \verb=\nocite=.
+Comparison with two of the most popular RAM-based Key-value pair databases: \textbf{memcached} and \textbf{Redis}.
+Run on an ASUS X555L quadcore Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 8gb DDR3 RAM @ 1600 MHz.
 
-In order to generate the appropriate reference entries, you will need
-to run \texttt{bibtex} after \texttt{latex} has been run, using the
-command \texttt{bibtex report}. This will generate a file
-\textsf{report.bbl}, which contains the bibliography entries. Once
-that file is there, you do not need to run \texttt{bibtex} again
-unless you add new citations, but you will probably have to run
-\texttt{latex} twice after running \texttt{bibtex} the first time.
+Write speed with different data sizes, etc.
 
-The \TeX{} FAQ (\cite{url-cite}) gives tips on how to cite URLs.
+256 is the limit data size of sdp messages...
 
-The file \textsf{refs.bib} provides an example of what can be done
-with Bib\TeX. You can find much more information in any book on
-\LaTeX, for example \cite{lamport,companion,kopka}
+As can be seen in figure XXX, the SpiNNaker Database (SpiDB) on the 4 chip board performs quite poorly against the two, running at around 7k put operations per second, compared to ... (thus slow by a factor of about 8) 
 
-% Local Variables: 
-% mode: latex
-% TeX-master: "report"
-% End: 
+
+\begin{figure}
+\begin{center}
+	\includegraphics[width=1\textwidth, natwidth=1063, natheight=550]{images/write_performance.png}
+\end{center}
+\caption{Write performance benchmark}
+\label{fig:die-plot}
+\end{figure}
+
+\section{Limitations}
+
+\section{Predictions}

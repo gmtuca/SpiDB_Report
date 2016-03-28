@@ -1,0 +1,1 @@
+latex -interaction=nonstopmode report.tex && bibtex report && latex -interaction=nonstopmode report.tex && latex -interaction=nonstopmode report.tex && dvipdfm report.dvi && okular report.pdf

@@ -1,118 +1,269 @@
-\chapter[Short Chap title]{This chapter has a very long title that would be too long for using in headers and table of contents}
-\section{Image processing}
-Because Image processing is such a large topic no attempt will be made
-here to describe the entire subject here but only areas directly
-relevant to the project as a whole. Note how we can cross reference
-sections of the document such as section~\ref{pg:filters}
+\chapter{Development}
 
-\section{Low level operations}
-\label{pg:filters}
-Here is an example of a list with bullets:
+This chapter describes xxx development of my application, SpiDB, from September 2015 to March 2016.
+From planning, design, testing, development, code review, etc. presentation of results to members of the Spinnaker team
+
+It outlines also my approach and design choices with their advantages/disadvantages with the hardware and specification. (eg. no acknowledgements)
+Approval from members of the SpiNNaker team.
+
+Strengths and weaknesses (limitations) of spinnaker
+...
+Thomas, etc.
+tutoring! kind of did it really
+
+
+...upload different programs to run on each core.
+Thus each chip contains the following instances: 
+
+test-first development
+
+what order I did things, etc.
+learning curve
+fixing bugs, helping spinnaker team etc.
+Bizantine protocol
+
+\section{Board communication fabric}
+\label{sec:background}
+
+[spinnaker datasheet page 30]
+
+-mention DTCM only 64kb (so preferred to use SDRAM)
+-look at your logbook for query plan stuff (at the start)
+-debugging with ybug. testing with unit tests
+-supported operations
+-host is stateless
+-tested on real data?
+
+Each processor node on SpiNNaker includes a communication controller which is responsible for generating and receiving packets to and from the communication network.
+The SpiNNaker architecture offers a range of...
+all of which are unreliable!!
+
+BUGS BUGS EVERYWHERE
+-duplicate
+-SWERR on startup
+-algorithms etc
+
+packet formats:
+
 \begin{itemize}
-\item{\it Mean} Take the mean value of the neighbourhood.
+\item \textbf{Multicast (MC)}
+routed by a key provided at the source
+originally designed for neuron spikes, etc... read papers about this
+router.. routing table
+\item \textbf{Point to Point (P2P)}
+sdp
+---udp protocol
 
-\item{\it Median Filter} Take the median value of the neighbourhood.
+unreliability....
+unreliable spikes (see that guy's paper...)
+
+2/3 packet loss without delay!!! 1 core to 1 core
+for large numbers (10,000) packet loss increases to 3/4. Packets above that result in WDOG state at the receiver end.
+maybe more reliability with a layer on top of UDP, which would be more expensive/slow
+
+types of packets!!
+multicast, etc.
+\item \textbf{Nearest-neighbour (NN)}
+\item \textbf{Fixed-route (FR)}
 \end{itemize}
 
-Here are a couple of mathematical formulae:
-\begin{quote}
-\centering
-$\Delta_1=I(x,y)-I(x+1,y+1)$ \\
-$(x-a)^2+(y-b)^2=R^2$
-\end{quote}
+A tree structure composed of \textit{root}, \textit{branch} and \textit{leaf} nodes. The tree structure presented by my database management system allows a divide and conquer approach to the database query plan. This means when queries are issued by the \textit{host}[definition] and received at the \textit{root}, they are broken down and forwarded for parallel processing through \textit{branch} and \textit{leaf} nodes. eg. COUNT, MAX, MIN, AVG, SUM
 
-A table is just like a figure. Table~\ref{wombat} uses the tabular
-environment.  Environments such as tabular can be used in ordinary
-text as well.
-\begin{table}
-\begin{center}
-\begin{tabular}{|r|c|c|c|}\hline\hline
-place&1991&1992&1993\\\hline
-CS Dept& 1&99&199\\
-Owens Park& 1876& 22&0\\
-Academy&0&0&99999\\\hline\hline
-\end{tabular}
-\end{center}
-\caption{Distribution of Wombats in Greater Manchester}\label{wombat}
-\end{table}
+problems:
+sending a large amount of packets with little or no delay xx kills xx the core. sending more than about 4 packets symultaneously at a destination results on a very high packet loss (2/3 of SDP packets get dropped).
 
 
-\section{Creating Diagrams}
-\label{sec:diagrams}
+solutions:...
+delays
+tree structure
+no acknowledgement
 
-Figure~\ref{fig:fig-eg} is a figure previously prepared using the
-\texttt{xfig} interactive drawing package. With the latest version of
-\texttt{xfig} it is quite easy to incorporate \texttt{xfig} diagrams.
-The \texttt{xfig} package is menu driven and reasonably self
-explanatory.
 
-Use the \emph{Export} menu option to save an encapsulated PostScript
-version of your figure, which can then be included in the document
-using the \verb=\includegraphics= command. Choose the \emph{Portrait}
-orientation option. For example, if the figure is in the file \textsf{
-  figure1.fig}, the exporting process will create a file \textsf{
-  figure1.eps}, which can then be included, scaled to whatever height
-or width you want.
+This approach has the following advantages (compared to a flat structure)
+-a core will only ever receive packets from up to 4 other cores symultaneously (branch: 4, root: 1, leaf: 1), which is the limit of reliability.
+-aggregation of results can be done in iterations/stages
 
+disadvantage:
+-less leaf nodes (which do the actual work)
+
+LIMITATION:
+no global timer, the maximum we can do is a timer for each chip (collection of 18 cores)
+reliability
+
+COMPLEXITY
+
+limitation:
+-single point of failure for each board(mention that it is already like that. no way to avoid).
+-SDRAM bandwidth
+
+scalability
+
+message id and all other fields, etc.
+
+\begin{itemize}
+\item 1x \textit{sark} - monitor process provided by the API to handle low level SpiNNaker operating system functions
+\item 1x \textit{reinjector} - utility process provided by the API to allow automatic re-propagation of dropped multicast packets
+\item 1x \textit{root} - central node which handles direct communication with host machine via UDP and redirects incomming queries to respective cores. 
+\item 3x \textit{branch} - intermediate node which aggregates queries from 4 leaf nodes and communicates back to host via UDP (why 4? because 4 sdp channels?). 
+\item 12x \textit{leaf} - receives insert/retrieve queries from the root, processes the request and then returns result to branch node
+\end{itemize}
+why branches, etc?
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=10cm]{figure1} % This scales the picture to
-                                      % a width of 10cm
-                                      % You can scale to the
-                                      % width or height you need
+	\includegraphics[width=0.8\textwidth, natwidth=794, natheight=1123]{images/spiDB_architecture.png}
 \end{center}
-\caption{Final version of the system}
-\label{fig:fig-eg}  
+\caption{SpiDB Architecture}
+%\label{fig:die-plot}
 \end{figure}
 
-Note that, if you want to use such graphics facilities in some other
-document, which does not use either the \texttt{third-rep} or
-\texttt{muthesis} document class, you will need to put the command
-\verb=\usepackage{graphicx}= after the \verb=\documentclass....=
-command in the main file.
 
-\section{Screen Dumps}
-\label{sec:screen-dumps}
+\subsection{PUT}
+
+Syntax:\\
+\noindent
+ {\large\textbf{put} \textit{(int|string)}:key \textit{(int|string)}:value} \\\\
+
+The \textbf{put} operation is the main way of inserting data onto the SpiDB distributed database. 
+Upon completion, such operation will store the specified key, mapping to its value, on the memory of an arbitrary chip in the Spinnaker board (as chosen by the root core). This operation expects an acknowledgement from the core which stored the entry.\\\\
+
+\noindent
+ Example usage:\\
+ \begin{lstlisting}
+ put "hello" "world"
+ put 123 "foo"
+ put "life" 42
+ put 1 2
+ \end{lstlisting}
+\noindent 
+ Complexity: linear to the size of the input key-value, constant to database size.\\\\
+ 
+Steps:
+\begin{enumerate}
+\item User issues query of format \textit{put "key" "value"} on host machine
+\item Query and metadata are converted into a byte array with the following format, transferred over UDP socket to the board
+
+\lstinputlisting[language=C]{code/putQuery.c}
+
+Where \textit{info} contains the metadata regarding the entry to be stored. It is composed of 32 bits, ...
+[bits bits bits, etc]
+
+how is it actually stored??? !!?!! say it and mention word alignment
+
+\item Packet transfer triggers interrupt on \textit{root} core, which selects a \textit{leaf} core to store the data entry (hash or Round Robin...?) and communicates to it via SDP
+\item \textit{leaf} triggers an interrupt and stores key-value entry into its dedicated region of SDRAM
+\item \textit{leaf} sends an acknowledgement message over UDP back to host
+\end{enumerate}
+
+\subsection{PULL}
+
+ Syntax:
+ \noindent
+ {\large\textbf{pull} \textit{(int|string)}:key}\\\\
+ 
+The \textbf{pull} operation is the main way of retrieving data from the SpiDB distributed database.
+When the operation is issued, the SpiNNaker cores will be coordinated to search for the given key and, if found, the value mapped by it will be returned to host. If the key does not exist, no reply is given, resulting on a timeout on the host (reason for this...). This means 
+-disadvantage: expensive if not found
+-advantage: less packet drops as less internal communication traffic
+ 
+\noindent
+ Example usage:\\
+ \begin{lstlisting}
+ pull "hello"
+ pull 123
+ \end{lstlisting}
+ Assuming successful execution of the put commands above, such pulls would return "world" and "foo" respectively.\\\\
+ Complexity: linear to the size of the input, linear to database size.\\\\
+
+\begin{enumerate}
+\item User issues query of format \textit{pull "key"} on host machine
+\item Query and metadata are converted into a byte array, transferred over UDP socket to board
+\item Packet transfer triggers interrupt on \textit{root} core, which issues a \textit{multicast} packet to all \textit{leaf} nodes requesting them to search for occurences of "key"
+\item \textit{leaf} triggers an interrupt
+\begin{itemize}
+\item If a \textit{leaf} node identifies "key" by scanning linearly through SDRAM, it responds to host (branch...?) with mapped value
+\item Else no response is sent, yielding timeout on host (reason for this!!!...?)
+\end{itemize}
+\end{enumerate}
+
+how the data is actually stored?
+
+SQL:
+column based?
+
+bandwidth (max) vs throughput (actual)
+
+
+identifies
+flow control of:
+put
+pull
+etc.
+
+Upon completion of the project, 
+
+ \newpage
+\noindent 
+  {\large\textbf{CREATE TABLE} \textit{(string)}:tableName(\\
+  	\textit{(string)}:column1 integer|varchar(\textit{int}),\\
+  	\textit{(string)}:column2 integer|varchar(\textit{int}),\\
+  	...\\
+  	);}\\\\
+\noindent
+  Reserves memory space for an SQL table and stores its metadata. This operation expects an acknowledgement.\\\\
+   Complexity: linear to the size of the input, constant to database size.\\\\
+ \noindent
+  {\large\textbf{INSERT INTO} \textit{(string)}:tableName(\textit{(string)}:column1,\textit{(string)}:column2,...)\\
+  \textbf{VALUES}(\textit{(int|string)}:value1,\textit{(int|string)}:value2,...);}\\\\
+\noindent
+  Inserts specified values on the given table's memory space at an arbitrary chip. This operation expects an acknowledgement.\\\\
+\noindent
+   Complexity: linear to the size of the input, constant to database size.\\\\
+\noindent
+  {\large\textbf{SELECT} *|\textit{(string)}:column1,\textit{(string)}:column2,...\\
+  \textbf{FROM} \textit{(string)}:tableName\\
+  \textbf{WHERE} \textit{(string)}:column|\textit{(int|string)}literal \\=|!=|\textless |\textless =|
+  \textgreater | \textgreater = \textit{(string)}:column|\textit{(int|string)}literal;}\\\\
+\noindent
+  Retrieves a list of entries corresponding to the previously inserted values on given table which match the WHERE criteria. Matching results are streamed in until timeout is reached. If no value matches the criteria, the Spinnaker board will not respond.\\\\
+\noindent
+Complexity: linear to the size of the input, linear to database size.\\\\
+  
+
 \begin{figure}
 \begin{center}
-\includegraphics[width=12cm]{screen}
+	\includegraphics[width=1.4\textwidth, natwidth=1063, natheight=509]{images/transmission_delay.png}
 \end{center}
-\caption{A screen dump}
-\label{fig:scr-dump}
+\caption{Transmission delay plot}
+\label{fig:die-plot}
 \end{figure}
 
-Screen dumps can often enhance the appearance and clarity of a report,
-although care should be taken not to overuse them. When using screen
-dumps it is useful to make use of \LaTeX's capability for using
-compressed PostScript files, as in the example shown in
-figure~\ref{fig:scr-dump}. 
+%\caption{Die plot of the SpiNNaker CMP}
 
-The image is first captured using, for example, \texttt{xv}, and saved
-in a file, e.g.\ \texttt{screen.ps}. Next, extract the bounding box
-information from the head of this file. In this case it is
-\begin{verbatim}
-%%BoundingBox: -100 -16 697 860
-\end{verbatim}
-and create a file with name given by adding \texttt{.bb} to the
-original file name (in this case the name is \texttt{screen.ps.bb}) which
-contains just this bounding box. You can now compress the original
-file, using \texttt{gzip}. The command
-\verb!\includegraphics[width=12cm]{screen}! will look for either
-\textsf{screen.ps} or \textsf{screen.ps.gz}, so you can compress or
-uncompress the \textsf{ps} file without changing the latex source.
+done:
+blocking vs non-blocking
 
-Alternatively, save as \texttt{.png} if using \texttt{pdflatex}.
+future work...
+cache (on DTCM)
+aggregation
+CGI server
+self balancing when IDLE (ie. move data to cores with less data, if a table is about to get full, move data around it's SDRAM) --- user typing = a long time
+million core machine
+improve parser
+allow longer queries in (more than 256 bytes)
+additional operations eg. delete, update, etc,...
+more reliability
+ACID properties
 
-The \texttt{draft} option can be used to exclude the actual figure,
-but leave an appropriate amount of space.
+\lstinputlisting[language=C, caption=SDP Packet Callback]{code/sdp_packet_callback.c}
 
-\textbf{You may not be able to see the screen dump if you are viewing this
-file from WWW. This is due to an unfortunate `feature' of the
-previewer xdvi.} If you view the files directly from
-\texttt{/opt/info/doc/latex/3rd-yr}, things should work properly.
+callback priorities etc.
 
-% Local Variables: 
-% mode: latex
-% TeX-master: "report"
-% End: 
+cannot possibly do more than that...
+ARM968 at only 600MHz (I think)
+
+response times. why are they so high sometimes?!?!
+-first explain how we gather the time (operating system could be interrupting, sark, etc.)
+
+
+hash vs naive

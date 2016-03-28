@@ -1,0 +1,7 @@
+typedef struct putQuery{
+  spiDBcommand    cmd;
+  id_t            id;
+
+  info_t          info;
+  uchar           k_v[256];
+} putQuery;
