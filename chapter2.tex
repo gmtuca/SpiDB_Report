@@ -1,6 +1,6 @@
 \chapter{Development}
 
-This chapter describes xxx development of my application, SpiDB, from September 2015 to March 2016.
+This chapter describes the development of my application, SpiDB, from September 2015 to March 2016.
 From planning, design, testing, development, code review, etc. presentation of results to members of the Spinnaker team
 
 It outlines also my approach and design choices with their advantages/disadvantages with the hardware and specification. (eg. no acknowledgements)
@@ -22,8 +22,42 @@ learning curve
 fixing bugs, helping spinnaker team etc.
 Bizantine protocol
 
-\section{Board communication fabric}
-\label{sec:background}
+\section{Planning and Design}
+In September I participated on the XXXth spinnaker workshop...
+API, etc.
+
+key-value then relational
+
+\section{Implementation}
+
+\section{Evaluation}
+
+\subsection{SpiNNaker Communication fabric}
+
+XXXX should this be on the introduction???
+event driven
+
+The SpiNNaker API allows the utilisation of 4 different communication protocols between cores in the system. These packets trigger prioratised interrupts on the receiver, as it is an event driven architecture. These can be used to spread work load and transmit information initially private to a core.
+It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsen if there is large traffic in the communication fabric. This means sending a large amount of packets symultaneously will result on packet drops.
+
+\begin{itemize}
+\item \textbf{Multicast (MC)}
+The MC protocol, originally designed to simulate neural spikes, predicts a sigle source core casting a packet to multiple destinations. The packet contains only a 32 bit routing key, used by an external process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
+
+router.. routing table
+\item \textbf{Point to Point (P2P)}
+XXX
+On top of the P2P layer, the SpiNNaker Datagram Protocol (SDP) was developed (build/written?) to allow larger transfers of data, of up to 280 (?) bytes, to reduce queueing on receival... (find the paper...)
+%https://spinnaker.cs.man.ac.uk/tiki-download_wiki_attachment.php?attId=16
+
+Using SDP, the SpiNNaker API XXX a User Datagram Protocol (UDP), allowing a two-way communication over IP addresses with the host machine. This allows uploading binaries and communicating back and forth with the hardware.
+
+unreliability....
+unreliable spikes (see that guy's paper...)
+
+\item \textbf{Nearest-neighbour (NN)}
+\item \textbf{Fixed-route (FR)}
+\end{itemize}
 
 [spinnaker datasheet page 30]
 
@@ -45,27 +79,6 @@ BUGS BUGS EVERYWHERE
 
 packet formats:
 
-\begin{itemize}
-\item \textbf{Multicast (MC)}
-routed by a key provided at the source
-originally designed for neuron spikes, etc... read papers about this
-router.. routing table
-\item \textbf{Point to Point (P2P)}
-sdp
----udp protocol
-
-unreliability....
-unreliable spikes (see that guy's paper...)
-
-2/3 packet loss without delay!!! 1 core to 1 core
-for large numbers (10,000) packet loss increases to 3/4. Packets above that result in WDOG state at the receiver end.
-maybe more reliability with a layer on top of UDP, which would be more expensive/slow
-
-types of packets!!
-multicast, etc.
-\item \textbf{Nearest-neighbour (NN)}
-\item \textbf{Fixed-route (FR)}
-\end{itemize}
 
 A tree structure composed of \textit{root}, \textit{branch} and \textit{leaf} nodes. The tree structure presented by my database management system allows a divide and conquer approach to the database query plan. This means when queries are issued by the \textit{host}[definition] and received at the \textit{root}, they are broken down and forwarded for parallel processing through \textit{branch} and \textit{leaf} nodes. eg. COUNT, MAX, MIN, AVG, SUM
 
