@@ -1,6 +1,29 @@
 \chapter{Development}
 
-This chapter describes the development of my application, SpiDB, from September 2015 to March 2016.
+This chapter describes the development of my application, SpiDB, from September 2015 to March 2016, involving planning, testing and implemention. The SpiNNaker project is open-source and so is my application, which can be found on the url \textit{https://github.com/SpiNNakerManchester/SpiNNakerGraphFrontEnd}.
+By being part of the SpiNNaker team in Manchester, I was directly exposed to the ongoing research, frequently receiving feedback on my work. The collaboration was effectively bi-directional, as I was able to constantly find, evaluate and fix inconsistencies and bugs in the API not known to the team.
+
+\section{Testing and Debugging}
+
+\section{Bugs}
+I have been one of the few users of a large amount of the SpiNNaker API, currently under contruction. This means some of it has not been fully tested, resulting in strange behaviour at times, making debugging of my own application difficult.
+
+blah blah test usability
+particularly
+
+Although not being directly part of the project, 
+
+MENTORING
+
+\begin{itemize}
+\item \textbf{Duplicate packets:} when multiple distinct SDP packets were sent from different sources to the same destination, strangely the receiving core would read the same packet duplicated a number of times. This behaviour was unexpected, so upon extensive testing and collaboration from the team, I was able to point the issue to a running processor binary named \textit{reinjector} and resolve the issue. 
+
+\item \textbf{Data Specification Error:} when uploading binaries to the board, sometimes cores would crash with the SWERR state. After giving the team detailed feedback on the issue, this was found to be caused by the SpiNNaker Data Specification framework, which handles allocation of data in shared RAM.
+
+\item algorithms
+
+\end{itemize}
+
 From planning, design, testing, development, code review, etc. presentation of results to members of the Spinnaker team
 
 It outlines also my approach and design choices with their advantages/disadvantages with the hardware and specification. (eg. no acknowledgements)
@@ -71,11 +94,6 @@ unreliable spikes (see that guy's paper...)
 Each processor node on SpiNNaker includes a communication controller which is responsible for generating and receiving packets to and from the communication network.
 The SpiNNaker architecture offers a range of...
 all of which are unreliable!!
-
-BUGS BUGS EVERYWHERE
--duplicate
--SWERR on startup
--algorithms etc
 
 packet formats:
 
