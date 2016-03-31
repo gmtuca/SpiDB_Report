@@ -1,102 +1,31 @@
 \chapter{Development}
 
-This chapter describes the development of my application, SpiDB, from September 2015 to March 2016, involving planning, testing and implemention. The SpiNNaker project is open-source and so is my application, which can be found on the url \textit{https://github.com/SpiNNakerManchester/SpiNNakerGraphFrontEnd}.
+This chapter describes the development of my database application, SpiDB, from September 2015 to March 2016, involving planning, testing and implemention. The project is open-source, which can be found at
+\textit{https://github.com/SpiNNakerManchester/SpiNNakerGraphFrontEnd}.
+
 By being part of the SpiNNaker team in Manchester, I was directly exposed to the ongoing research, frequently receiving feedback on my work. The collaboration was effectively bi-directional, as I was able to constantly find, evaluate and fix inconsistencies and bugs in the API not known to the team.
 
-\section{Testing and Debugging}
-
-\section{Bugs}
-I have been one of the few users of a large amount of the SpiNNaker API, currently under contruction. This means some of it has not been fully tested, resulting in strange behaviour at times, making debugging of my own application difficult.
-
-blah blah test usability
-particularly
-
-Although not being directly part of the project, 
-
-MENTORING
-
-\begin{itemize}
-\item \textbf{Duplicate packets:} when multiple distinct SDP packets were sent from different sources to the same destination, strangely the receiving core would read the same packet duplicated a number of times. This behaviour was unexpected, so upon extensive testing and collaboration from the team, I was able to point the issue to a running processor binary named \textit{reinjector} and resolve the issue. 
-
-\item \textbf{Data Specification Error:} when uploading binaries to the board, sometimes cores would crash with the SWERR state. After giving the team detailed feedback on the issue, this was found to be caused by the SpiNNaker Data Specification framework, which handles allocation of data in shared RAM.
-
-\item algorithms
-
-\end{itemize}
-
-From planning, design, testing, development, code review, etc. presentation of results to members of the Spinnaker team
-
-It outlines also my approach and design choices with their advantages/disadvantages with the hardware and specification. (eg. no acknowledgements)
-Approval from members of the SpiNNaker team.
-
-Strengths and weaknesses (limitations) of spinnaker
-...
-Thomas, etc.
-tutoring! kind of did it really
-
-
-...upload different programs to run on each core.
-Thus each chip contains the following instances: 
-
-test-first development
-
-what order I did things, etc.
-learning curve
-fixing bugs, helping spinnaker team etc.
-Bizantine protocol
-
 \section{Planning and Design}
-In September I participated on the XXXth spinnaker workshop...
-API, etc.
+The project imposed a relatively steep learning curve, given the complexity of the low level distributed architecture, still under development. Given this, on the 5th? of September 2015, I attended the 5th? SpiNNaker workshop, where multiple researchers from around the globe gathered for a one week course on the basics of the hardware??. I was then officially introduced to the Manchester team... planning etc.
+
+The plan involved splitting my project into two parts: building a NoSQL Key-value store and an SQL based Relational Database.
+
+[blackboard is down...] get planning link
 
 key-value then relational
 
 \section{Implementation}
 
-\section{Evaluation}
-
-\subsection{SpiNNaker Communication fabric}
-
-XXXX should this be on the introduction???
-event driven
-
-The SpiNNaker API allows the utilisation of 4 different communication protocols between cores in the system. These packets trigger prioratised interrupts on the receiver, as it is an event driven architecture. These can be used to spread work load and transmit information initially private to a core.
-It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsen if there is large traffic in the communication fabric. This means sending a large amount of packets symultaneously will result on packet drops.
-
+\subsection{Technologies Used}
+The SpiNNaker API is split into the Python toolchain, running on the host machine (user's computer) and C code, compiled into machine code to run on the board. A strong knowledge of ARM assembly was also needed, given the low level architecture.
+ 
+These technologies were used to develop the following deliverables:
 \begin{itemize}
-\item \textbf{Multicast (MC)}
-The MC protocol, originally designed to simulate neural spikes, predicts a sigle source core casting a packet to multiple destinations. The packet contains only a 32 bit routing key, used by an external process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
-
-router.. routing table
-\item \textbf{Point to Point (P2P)}
-XXX
-On top of the P2P layer, the SpiNNaker Datagram Protocol (SDP) was developed (build/written?) to allow larger transfers of data, of up to 280 (?) bytes, to reduce queueing on receival... (find the paper...)
-%https://spinnaker.cs.man.ac.uk/tiki-download_wiki_attachment.php?attId=16
-
-Using SDP, the SpiNNaker API XXX a User Datagram Protocol (UDP), allowing a two-way communication over IP addresses with the host machine. This allows uploading binaries and communicating back and forth with the hardware.
-
-unreliability....
-unreliable spikes (see that guy's paper...)
-
-\item \textbf{Nearest-neighbour (NN)}
-\item \textbf{Fixed-route (FR)}
+	\item \textbf{Python}: (2000 lines of code) uploading binaries to the board, status checking, query parsing, Graphical User Interface, data analytics and socket communication.
+	\item \textbf{C}: (2500 lines of code) event driven communication between processors, low level memory management, distributed query processing.
 \end{itemize}
 
-[spinnaker datasheet page 30]
-
--mention DTCM only 64kb (so preferred to use SDRAM)
--look at your logbook for query plan stuff (at the start)
--debugging with ybug. testing with unit tests
--supported operations
--host is stateless
--tested on real data?
-
-Each processor node on SpiNNaker includes a communication controller which is responsible for generating and receiving packets to and from the communication network.
-The SpiNNaker architecture offers a range of...
-all of which are unreliable!!
-
-packet formats:
-
+\subsection{Approach}
 
 A tree structure composed of \textit{root}, \textit{branch} and \textit{leaf} nodes. The tree structure presented by my database management system allows a divide and conquer approach to the database query plan. This means when queries are issued by the \textit{host}[definition] and received at the \textit{root}, they are broken down and forwarded for parallel processing through \textit{branch} and \textit{leaf} nodes. eg. COUNT, MAX, MIN, AVG, SUM
 
@@ -131,6 +60,8 @@ scalability
 
 message id and all other fields, etc.
 
+each chip, following instances:...
+
 \begin{itemize}
 \item 1x \textit{sark} - monitor process provided by the API to handle low level SpiNNaker operating system functions
 \item 1x \textit{reinjector} - utility process provided by the API to allow automatic re-propagation of dropped multicast packets
@@ -148,8 +79,11 @@ why branches, etc?
 %\label{fig:die-plot}
 \end{figure}
 
+\subsection{Key-value Store}
+\subsubsection{PUT}
 
-\subsection{PUT}
+DOT SYNTAX AND EXAMPLE CODE SQL KV.
+graphs from ui and ui itself
 
 Syntax:\\
 \noindent
@@ -186,7 +120,10 @@ how is it actually stored??? !!?!! say it and mention word alignment
 \item \textit{leaf} sends an acknowledgement message over UDP back to host
 \end{enumerate}
 
-\subsection{PULL}
+\subsubsection{PULL}
+
+
+design decision: pull no reply....
 
  Syntax:
  \noindent
@@ -217,6 +154,8 @@ When the operation is issued, the SpiNNaker cores will be coordinated to search 
 \end{itemize}
 \end{enumerate}
 
+
+(benchmarking in chapter 3)
 how the data is actually stored?
 
 SQL:
@@ -233,7 +172,10 @@ etc.
 
 Upon completion of the project, 
 
- \newpage
+
+\subsection{Relational Database}
+
+\subsubsection{CREATE }
 \noindent 
   {\large\textbf{CREATE TABLE} \textit{(string)}:tableName(\\
   	\textit{(string)}:column1 integer|varchar(\textit{int}),\\
@@ -243,6 +185,9 @@ Upon completion of the project,
 \noindent
   Reserves memory space for an SQL table and stores its metadata. This operation expects an acknowledgement.\\\\
    Complexity: linear to the size of the input, constant to database size.\\\\
+   
+\subsubsection{INSERT}   
+   
  \noindent
   {\large\textbf{INSERT INTO} \textit{(string)}:tableName(\textit{(string)}:column1,\textit{(string)}:column2,...)\\
   \textbf{VALUES}(\textit{(int|string)}:value1,\textit{(int|string)}:value2,...);}\\\\
@@ -250,6 +195,9 @@ Upon completion of the project,
   Inserts specified values on the given table's memory space at an arbitrary chip. This operation expects an acknowledgement.\\\\
 \noindent
    Complexity: linear to the size of the input, constant to database size.\\\\
+
+\subsubsection{SELECT}   
+   
 \noindent
   {\large\textbf{SELECT} *|\textit{(string)}:column1,\textit{(string)}:column2,...\\
   \textbf{FROM} \textit{(string)}:tableName\\
@@ -260,41 +208,85 @@ Upon completion of the project,
 \noindent
 Complexity: linear to the size of the input, linear to database size.\\\\
   
+\subsection{Out-of-order execution}
+As SpiNNaker is a distributed architecture, it may cause many issues and inconsistencies.
+For example, if we try to execute the following code sequence in order:\\
+\begin{lstlisting}[caption={Non-blocking execution}, label=list:non-blocking]
+put "hello" "world"
+pull "hello"
+\end{lstlisting}
+
+We are not guaranteed that the \textit{pull} query will retrieve the value "world". As both queries are executed symultaneously on the SpiNNaker board, there is a chance that the \textit{pull} operation will terminate before the \textit{put} does, thus failing to return a value.
+
+As a solution to this dependency constraint, my SpiDB database API includes the syntax symbol "." (dot) which blocks execution until all preceeding operations terminate. This allows the programmer to control execution flow, choosing what is allowed to compute out-of-order (in parallel) and what should be sequentialised at a cost of performance. This is a similar concept to the Verilog blocking and non-blocking assignments.[?]
+
+\begin{lstlisting}[caption={Blocking execution}, label=list:blocking1]
+put "hello" "world"
+.
+pull "hello"
+\end{lstlisting}
+
+The above code will assure sequential code, meaning the \textit{pull} operation will always return "world". It is usually a good idea to block execution when given a dependency constraint. This can also be done with larger code fragments.
+
+\begin{lstlisting}[caption={Blocking execution}, label=list:blocking2]
+put "hello" "world"
+put "life" 42
+put 123 456
+.
+pull "hello"
+pull "life"
+pull 123
+\end{lstlisting}
+
+It is worth noting that although non-block operations can cause out-of-order execution, it does not occur very frequently. This is because, when transmitting data to the board, queries are serialised over ethernet in order of appearence and in addition there is a small forced transmission delay between these packets. This will be further discussed on chapter 3.%\autoref{cha:eval}.
+
+\section{Testing and Debugging}
+I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start.
+
+Realtime debugging on the SpiNNaker board is relatively hard, but luckly the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug}, also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality.\cite{ybug} [link]
 
 \begin{figure}
-\begin{center}
-	\includegraphics[width=1.4\textwidth, natwidth=1063, natheight=509]{images/transmission_delay.png}
-\end{center}
-\caption{Transmission delay plot}
-\label{fig:die-plot}
+  \centering
+  \includegraphics[width=1.3\linewidth, natwidth=1366, natheight=768]{images/debugging.png}
+  \captionof{figure}{Debugging}
+  \label{fig:debugging}
+  \centering
+  \includegraphics[width=1.3\linewidth, natwidth=1366, natheight=768]{images/testing.png}
+  \captionof{figure}{Testing}
+  \label{fig:testing}
 \end{figure}
 
-%\caption{Die plot of the SpiNNaker CMP}
 
-done:
-blocking vs non-blocking
+\section{Bugs}
+I have been one of the few users of a large amount of the SpiNNaker API, currently under contruction. This means some of it has not been fully tested, resulting in strange behaviour at times, making debugging of my own application difficult.
 
-future work...
-cache (on DTCM)
-aggregation
-CGI server
-self balancing when IDLE (ie. move data to cores with less data, if a table is about to get full, move data around it's SDRAM) --- user typing = a long time
-million core machine
-improve parser
-allow longer queries in (more than 256 bytes)
-additional operations eg. delete, update, etc,...
-more reliability
-ACID properties
+blah blah test usability
+particularly
 
-\lstinputlisting[language=C, caption=SDP Packet Callback]{code/sdp_packet_callback.c}
+Although not being directly part of the project, 
 
-callback priorities etc.
+MENTORING
 
-cannot possibly do more than that...
-ARM968 at only 600MHz (I think)
+\begin{itemize}
+\item \textbf{Duplicate packets:} when multiple distinct SDP packets were sent from different sources to the same destination, strangely the receiving core would read the same packet duplicated a number of times. This behaviour was unexpected, so upon extensive testing and collaboration from the team, I was able to point the issue to a running processor binary named \textit{reinjector} and resolve the issue. 
 
-response times. why are they so high sometimes?!?!
--first explain how we gather the time (operating system could be interrupting, sark, etc.)
+\item \textbf{Data Specification Error:} when uploading binaries to the board, sometimes cores would crash with the SWERR state. After giving the team detailed feedback on the issue, this was found to be caused by the SpiNNaker Data Specification framework, which handles allocation of data in shared RAM.
 
+\item algorithms
 
-hash vs naive
+\end{itemize}
+
+From planning, design, testing, development, code review, etc. presentation of results to members of the Spinnaker team
+
+It outlines also my approach and design choices with their advantages/disadvantages with the hardware and specification. (eg. no acknowledgements)
+Approval from members of the SpiNNaker team.
+
+Strengths and weaknesses (limitations) of spinnaker
+...
+Thomas, etc.
+tutoring! kind of did it really
+
+...upload different programs to run on each core.
+Thus each chip contains the following instances: 
+
+Bizantine protocol
