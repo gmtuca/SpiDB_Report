@@ -1,7 +1,43 @@
 \chapter{Example of operation}
 
-An appendix is just like any other chapter, except that it comes after
-the appendix command in the master file.
+\section{Communication Reliability}
+\label{sec:appendix_comm_rel}
 
-One use of an appendix is to include an example of input to the system
-and the corresponding output.
+This section contains code snippets to send SDP packets from single source to single destination with delays between them. These were used in the experiments described on chapter \ref{cha:eval}, section \ref{sec:eval_comm_rel}.
+
+\begin{lstlisting}[caption={Source}]
+uint rcv = 0;
+
+void sdp_packet_callback(register uint mailbox, uint port) {
+    rcv++;
+    spin1_msg_free((sdp_msg_t*)mailbox);
+    return;
+}
+
+...
+
+spin1_callback_on(SDP_PACKET_RX,    sdp_packet_callback, 0);
+
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Destination}]
+void send_sdp_packets(uint32_t number_of_packets, uint32_t delay, uint32_t chip, uint32_t core){
+	sdp_msg_t msg;
+    msg.flags       = 0x87;
+    msg.tag         = 0;
+
+    msg.srce_addr   = spin1_get_chip_id();
+    msg.srce_port   = (SDP_PORT << PORT_SHIFT) | spin1_get_core_id();
+
+    msg.dest_addr   = chip;
+    msg.dest_port   = (SDP_PORT << PORT_SHIFT) | core;
+    msg.length 		= sizeof(sdp_hdr_t);
+
+    for(uint i = 0; i < number_of_packets; i++){
+    	if(!spin1_send_sdp_msg(&msg, SDP_TIMEOUT)){
+        	log_error("Failed to send");
+        }
+        sark_delay_us(delay);
+    }
+}
+\end{lstlisting}
