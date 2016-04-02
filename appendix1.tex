@@ -5,6 +5,8 @@
 
 This section contains code snippets to send SDP packets from single source to single destination with delays between them. These were used in the experiments described on chapter \ref{cha:eval}, section \ref{sec:eval_comm_rel}.
 
+Transmitting packets with variable delay:
+
 \begin{lstlisting}[caption={Source}]
 uint rcv = 0;
 
@@ -41,3 +43,27 @@ void send_sdp_packets(uint32_t number_of_packets, uint32_t delay, uint32_t chip,
     }
 }
 \end{lstlisting}
+
+SpiDB performance with variable delay:
+
+\begin{table}
+\begin{tabular}{ r | r | r }
+\textbf{interval (µs)} & \textbf{packet drop (\%)} & \textbf{performance (ops/sec)}  \\
+100 & 0.076 	& 6175 \\
+90	& 0.670		& 6608 \\
+80	& 0.475		& 7042 \\
+70	& 0.445		& 7408 \\
+60	& 0.150		& 8394 \\
+50	& 0.265		& 9057 \\
+40	& 1.010		& 9882 \\
+30	& 11.510	& 9918 \\
+20	& 22.910	& 9506 \\ 
+10	& 34.140	& 8960 \\
+7	& 33.965 	& 9778 \\
+4	& 98.432 	& 243 \\
+\end{tabular}
+\caption{SpiDB insertion performance with variable transmission delay}
+\label{table:performance_delay}
+\end{table}
+
+
