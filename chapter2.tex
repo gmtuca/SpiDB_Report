@@ -14,10 +14,8 @@ The plan involved splitting my project into two parts: building a NoSQL Key-valu
 
 key-value then relational
 
-\section{Implementation}
-
-\subsection{Technologies Used}
-The SpiNNaker API is split into the Python toolchain, running on the host machine (user's computer) and C code, compiled into machine code to run on the board. A strong knowledge of ARM assembly was also needed, given the low level architecture.
+\section{Technologies Used}
+In this project I used mostly the SpiNNaker API, which is split into the Python toolchain, running on the host machine (user's computer) and C code, compiled into machine code to run on the board. A strong knowledge of ARM assembly was also needed, given the low level architecture.
  
 These technologies were used to develop the following deliverables:
 \begin{itemize}
@@ -25,7 +23,7 @@ These technologies were used to develop the following deliverables:
 	\item \textbf{C}: (2500 lines of code) event driven communication between processors, low level memory management, distributed query processing.
 \end{itemize}
 
-\subsection{Approach}
+\section{Approach}
 
 A tree structure composed of \textit{root}, \textit{branch} and \textit{leaf} nodes. The tree structure presented by my database management system allows a divide and conquer approach to the database query plan. This means when queries are issued by the \textit{host}[definition] and received at the \textit{root}, they are broken down and forwarded for parallel processing through \textit{branch} and \textit{leaf} nodes. eg. COUNT, MAX, MIN, AVG, SUM
 
@@ -37,6 +35,9 @@ solutions:...
 delays
 tree structure
 no acknowledgement
+
+
+complexity
 
 
 This approach has the following advantages (compared to a flat structure)
@@ -71,60 +72,68 @@ each chip, following instances:...
 \end{itemize}
 why branches, etc?
 
-\begin{figure}
-\begin{center}
-	\includegraphics[width=0.8\textwidth, natwidth=794, natheight=1123]{images/spiDB_architecture.png}
-\end{center}
-\caption{SpiDB Architecture}
-%\label{fig:die-plot}
-\end{figure}
+%\includegraphics[width=0.8\textwidth, natwidth=794, natheight=1123]{images/spiDB_architecture.png}
 
-\subsection{Key-value Store}
-\subsubsection{PUT}
+\section{Key-value Store}
+The first half of the project involved developing a distributed key-value store, in which users can insert and retrieve data entries in a dictionary form. This means the user must be able to set keys mapping to values and then retrieve such values when given the same keys, these can be of type \textit{int} or \textit{string}. This section describes in detail the internal processing of the insert (\textit{put}) and retrieve (\textit{pull}) queries. 
 
-DOT SYNTAX AND EXAMPLE CODE SQL KV.
-graphs from ui and ui itself
-
-Syntax:\\
-\noindent
- {\large\textbf{put} \textit{(int|string)}:key \textit{(int|string)}:value} \\\\
-
+\subsection{PUT}
 The \textbf{put} operation is the main way of inserting data onto the SpiDB distributed database. 
-Upon completion, such operation will store the specified key, mapping to its value, on the memory of an arbitrary chip in the Spinnaker board (as chosen by the root core). This operation expects an acknowledgement from the core which stored the entry.\\\\
+Upon completion, such operation will store the specified key, mapping to its value, on the memory of an arbitrary chip in the Spinnaker board (as chosen by the \textit{root} core). This operation expects an acknowledgement from the core which stored the entry.
 
-\noindent
- Example usage:\\
- \begin{lstlisting}
- put "hello" "world"
- put 123 "foo"
- put "life" 42
- put 1 2
- \end{lstlisting}
-\noindent 
- Complexity: linear to the size of the input key-value, constant to database size.\\\\
+Example usage:
+\begin{lstlisting}
+put "hello" "world"
+put 123 "foo"
+put "life" 42
+put 1 2
+\end{lstlisting}
  
-Steps:
+Internally the following steps occur:
 \begin{enumerate}
-\item User issues query of format \textit{put "key" "value"} on host machine
-\item Query and metadata are converted into a byte array with the following format, transferred over UDP socket to the board
-
+\item User issues query of format \textit{put "key" "value"} on host machine.
+\item Query and metadata are converted into a byte array with the following format, transferred via UDP over Ethernet to the board (figure \ref{fig:host-root}).
 \lstinputlisting[language=C]{code/putQuery.c}
-
-Where \textit{info} contains the metadata regarding the entry to be stored. It is composed of 32 bits, ...
-[bits bits bits, etc]
-
-how is it actually stored??? !!?!! say it and mention word alignment
-
-\item Packet transfer triggers interrupt on \textit{root} core, which selects a \textit{leaf} core to store the data entry (hash or Round Robin...?) and communicates to it via SDP
-\item \textit{leaf} triggers an interrupt and stores key-value entry into its dedicated region of SDRAM
-\item \textit{leaf} sends an acknowledgement message over UDP back to host
+In this case \textit{SpiDBCommands} is set to the constant representing the put operation, \textit{id} identifies every query uniquely, \textit{info} contains bit encoding of the size and type of both key and value, \textit{k\textunderscore v} contains both entries appended.
+\item Packet arrival triggers interrupt on \textit{root} core, via the SDP protocol, and is decoded.
+\item \textit{root} selects a \textit{leaf} core to store the data entries in one of the following ways, specified by the user:
+\begin{itemize}
+	\item \textbf{Naive}: As packets arrive, they are assigned to a different \textit{leaf} node in a Round-Robin manner.
+	\item \textbf{Hashing}: the given key is used to produce a 32-bit hash value, which is decoded to assign the query to a specific \textit{leaf} node.
+\end{itemize}
+\item \textit{root} communicates to chosen \textit{leaf} node with \textit{put} contents via SDP (figure \ref{fig:root-leaf}).
+\item \textit{leaf} node triggers an interrupt and stores key-value entry into its dedicated region of SDRAM.
+\item \textit{leaf} sends an acknowledgement message over UDP back to host (figure \ref{fig:leaf-host}).
+\item User receives timing information and query result.
 \end{enumerate}
 
 
-hash naive
+Complexity: linear to the size of the input key-value, constant to database size.
+
+\begin{figure}
+\centering
+\begin{minipage}{.32\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth, natwidth=794, natheight=1123]{images/put1.png}
+  \captionof{figure}{Host to root packet}
+  \label{fig:host-root}
+\end{minipage}%
+\begin{minipage}{.32\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth, natwidth=794, natheight=1123]{images/put2.png}
+  \captionof{figure}{Root to leaf packet}
+  \label{fig:root-leaf}
+\end{minipage}
+\begin{minipage}{.32\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth, natwidth=794, natheight=1123]{images/put3.png}
+  \captionof{figure}{Leaf to host packet}
+  \label{fig:leaf-host}
+\end{minipage}
+\end{figure}
 
 
-\subsubsection{PULL}
+\subsection{PULL}
 
 
 design decision: pull no reply....
@@ -177,9 +186,9 @@ etc.
 Upon completion of the project, 
 
 
-\subsection{Relational Database}
+\section{Relational Database}
 
-\subsubsection{CREATE }
+\subsection{CREATE }
 \noindent 
   {\large\textbf{CREATE TABLE} \textit{(string)}:tableName(\\
   	\textit{(string)}:column1 integer|varchar(\textit{int}),\\
@@ -190,7 +199,7 @@ Upon completion of the project,
   Reserves memory space for an SQL table and stores its metadata. This operation expects an acknowledgement.\\\\
    Complexity: linear to the size of the input, constant to database size.\\\\
    
-\subsubsection{INSERT}   
+\subsection{INSERT}   
    
  \noindent
   {\large\textbf{INSERT INTO} \textit{(string)}:tableName(\textit{(string)}:column1,\textit{(string)}:column2,...)\\
@@ -200,7 +209,7 @@ Upon completion of the project,
 \noindent
    Complexity: linear to the size of the input, constant to database size.\\\\
 
-\subsubsection{SELECT}   
+\subsection{SELECT}   
    
 \noindent
   {\large\textbf{SELECT} *|\textit{(string)}:column1,\textit{(string)}:column2,...\\
@@ -212,7 +221,11 @@ Upon completion of the project,
 \noindent
 Complexity: linear to the size of the input, linear to database size.\\\\
   
-\subsection{Out-of-order execution}
+\section{User Interface} 
+
+graphs from ui and ui itself 
+  
+\section{Out-of-order execution}
 As SpiNNaker is a distributed architecture, it may cause many issues and inconsistencies.
 For example, if we try to execute the following code sequence in order:\\
 \begin{lstlisting}[caption={Non-blocking execution}, label=list:non-blocking]

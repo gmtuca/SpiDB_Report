@@ -1,6 +1,6 @@
 \chapter{Evaluation}
 \label{cha:eval}
-One of the main aims of my project is the evaluation of results...
+This research project has among its main aims the evaluation of results, described in this chapter. It is important to analyse how this general purpose application performs under the SpiNNaker environments and what architectural limitations it faces, which is useful feedback to the team. The chapter outlines also performance benchmarks of SpiDB in comparison with other database systems and how it can be improved.
 
 \section{Transmission delay}
 \label{sec:eval_comm_rel}
@@ -11,7 +11,9 @@ Upon experimenting, I found that sending a large amount of consecutive, immediat
 
 \begin{table}
 \begin{tabular}{ r | c | c | c | c | c }
-Packets sent & no delay & 2µs delay & 5µs delay & 10µs delay & 100µs delay \\
+ & \multicolumn{5}{c}{\textbf{Successful deliveries (\%)}} \\
+
+\textbf{Packets sent} & \textbf{no delay} & \textbf{2$\mu$s delay} & \textbf{5$\mu$s delay} & \textbf{10$\mu$s delay} & \textbf{100$\mu$s delay} \\
 50,000 & 9.56\% & 57.73\% & 95.95\% & 98.36\% & 99.85\% \\
 100,000 & 12.15\% & 54.97\% & 97.99\% & 99.13\% & 99.92\% \\
 200,000 & 13.07\% & 50.55\% & 99.01\% & 99.33\% & 99.96\% \\
@@ -22,11 +24,11 @@ Packets sent & no delay & 2µs delay & 5µs delay & 10µs delay & 100µs delay \
 \label{table:sdp_deliveries}
 \end{table}
 
-Note that the experiment, made on SpiNN-3, involved sending a single point-to-point packet multiple times to the same destination, containing only the 8 byte SDP header. The destination did not store or read the packet contents, only incrementing a counter upon packet receival. This was used to show the maximum possible transmission rate allowed by the SDP protocol under the hardware communication fabric. Code snippets and more information can be found on the appendix under section \ref{sec:appendix_comm_rel}.
+Note that the experiment, made on SpiNN-3, involved sending a single point-to-point packet multiple times to the same destination on the same chip, containing only the 8 byte SDP header. The destination did not store or read the packet contents, only incrementing a counter upon packet receival. This was used to show the maximum possible transmission rate allowed by the SDP protocol under the hardware communication fabric. Code snippets and more information can be found on the appendix under section \ref{sec:appendix_comm_rel}.
 
 Ideally these packets would send useful information, to be read upon arrival, which would keep the destination busy. From my experience and input from the team, the best way to achieve this is by immediately storing the SDP packet contents into a buffer when it is received and then handling it at a different point in time (listing \ref{lst:sdp_packet_callback}). The reason for this is that if another packet arrives as we are processing the current packet with same or higher priority, the incomming packet will drop.
 
-Ideally high priority should be assigned to storing incomming packets into a buffer and the actual processing should have lower priority, as it can be handled at a later point in time. It is important to note that this can cause starvation and buffer overflow if there are too many immediate packets being received. For instance, if our SDP packet is of size 12-byte (8-byte header + 32-bit data) and stored into a buffer in DTCM upon receival, we would only ever be able to hold up to about 5,000 messages at once (64-Kbytes DTCM size / 12-byte packet size). Realistically a large part of DTCM contains the stack, local and global variables, so that number will be drastically reduced. In my application, SpiDB, insert and retrieve database queries have a size of 256-bytes, which means a limit of 250 entries in the buffer if DTCM were empty.
+High priority should be assigned to storing incomming packets into a buffer and the actual processing should have lower priority, as it can be handled at a later point in time. It is important to note that this can cause starvation and buffer overflow if there are too many immediate packets being received. For instance, if our SDP packet is of size 12-byte (8-byte header + 32-bit data) and stored into a buffer in DTCM upon receival, we would only ever be able to hold up to about 5,000 messages at once (64-Kbytes DTCM size / 12-byte packet size). Realistically a large part of DTCM contains the stack, local and global variables, so that number will be drastically reduced. In my application, SpiDB, insert and retrieve database queries have a size of 256-bytes, which means a limit of 250 entries in the buffer if DTCM were empty.
 
 This evaluation is important because it allows finding the optimal transmission delay for an application. A developer on SpiNNaker using the point-to-point protocol needs to find the balance between transmission rate and reliability, which are inversely proportional. This balance is application dependent.
 
@@ -44,11 +46,40 @@ As can be seen on figure \ref{fig:transmission-delay}, large packet transmission
 \label{fig:transmission-delay}
 \end{figure}
 
+what are reasons for packets to drop? because thingy just takes 1 microsecond or does it?...
+
+\section{Performance benchmark}
+
+In order to evaluate the performance of my database management system, I compared it with two of the most popular RAM-based Key-value pair databases: \textbf{memcached} and \textbf{Redis}.
+
+Figure \ref{fig:write-perf-benchmark} shows that the SpiNNaker Database (SpiDB) performs quite poorly against the two competitors, running at about 7,000-8,000 operations per second, which is slower than the others by a factor of 8. Performance was mostly constant given input size, up to the maximum SDP data size of 256-bytes.
+
+how to improve this? spinnlink
+
+
+100,000
+
+The \textbf{memcached} and \textbf{Redis} benchmarks were run on an ASUS X555L quadcore Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 8gb DDR3 RAM @ 1600 MHz. SpiNN-3
+
+\begin{figure}
+\begin{center}
+	\includegraphics[width=1.4\textwidth, natwidth=1063, natheight=509]{images/write_performance.png}
+\end{center}
+\caption{PUT operation performance benchmark}
+\label{fig:write-perf-benchmark}
+\end{figure}
+
+\section{Hash vs Naive}
+
+\section{Sequential vs Parallel}
+
+\section{Limitations}
+
+\section{Predictions}
+
+
 put operations
-
 acknowledgements
-
- improve
 
 THIS TAKES 1microsecond using the watchdog timer.
 
@@ -73,42 +104,14 @@ why does this happen?
 
 single source, multiple destinations
 
-
-WHY
-
-
 always lose 77...
 
 maybe more reliability with a layer on top of UDP, which would be more expensive/slow
 
-
-
 aim: balance of memory and processing power on the chip, etc.
-
 
 This would ideally allow a linear speedup of data retrival in comparison with a sequential system.
 
-
-\section{Performance benchmark}
-
-Comparison with two of the most popular RAM-based Key-value pair databases: \textbf{memcached} and \textbf{Redis}.
-Run on an ASUS X555L quadcore Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 8gb DDR3 RAM @ 1600 MHz.
-
-Write speed with different data sizes, etc.
-
-256 is the limit data size of sdp messages...
-
-As can be seen in figure XXX, the SpiNNaker Database (SpiDB) on the 4 chip board performs quite poorly against the two, running at around 7k put operations per second, compared to ... (thus slow by a factor of about 8) 
-
-complexity
-
-hash vs naive
-
-HOW ABOUT ALL SEQUENTIAL (dots) VS ALL PARALLEL????
-
-\section{Limitations}
-
-\section{Predictions}
 
 \section{Future work}
 future work...
