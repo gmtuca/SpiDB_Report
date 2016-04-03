@@ -5,7 +5,7 @@ This chapter describes the development of my database application, SpiDB, from S
 
 By being part of the SpiNNaker team in Manchester, I was directly exposed to the ongoing research, frequently receiving feedback on my work. The collaboration was effectively bi-directional, as I was able to constantly find, evaluate and fix inconsistencies and bugs in the API not known to the team.
 
-\section{Planning and Design}
+\section{Planning}
 My project imposed a relatively steep learning curve, given the complexity of the low level distributed architecture, still under development. Given this, on the 5th? of September 2015, I attended the 5th? SpiNNaker workshop, where multiple researchers from around the globe gathered for a one week course on the basics of the hardware??. I was then officially introduced to the Manchester team... planning etc.
 
 The plan involved splitting my project into two parts: building a NoSQL Key-value store and an SQL based Relational Database.
@@ -14,8 +14,24 @@ The plan involved splitting my project into two parts: building a NoSQL Key-valu
 
 key-value then relational
 
+\section{Requirements}
+
+Large, commercial database management systems have a broad range of complex requirements. From these I have selected 4 important concepts which must have strict focus on the SpiDB system:
+
+\begin{itemize}
+	\item \textbf{Reliability}: user's queries must complete in a reasonable way. This means any internal errors, inconsistencies or communication failures should be handled from within the database system, avoiding unpredicted failures to the user. This is a difficult task given the unreliability of the SpiNNaker communication fabric, which is further discussed on XXXX.
+	\item \textbf{Durability}: user's queries with the aim of modifying the database state should persist, being internally stored until removal. The SpiNNaker hardware does not contain permanent storage components, reducing this contraint to "insert operations must persist until shutdown". It would be possible to externally connect the board to a mass-storage device, but it is outside of the scope of this project.
+	\item \textbf{Isolation}: executing transactions concurrently must have the same effect as doing so sequentially. Concurrency control is an important part of this parallel database system, as it aims to handle thousands of concurrent queries distributed among thousands of processing cores. An approach to ensure isolation in the system is further discussed in section \ref{sec:out-of-order}.
+	\item \textbf{Scalability}: the system must be able to handle a large number of parallel queries and have enhanced performance when given more hardware resources, in this case processor count.	This is arguably the most important of all requirements, as the SpiNNaker team is currently focusing on building a large scale machine composed of 1,000,000 processing cores. If this application scales well, it will quickly be able to show the strengths and weaknesses of the machine.
+\end{itemize}
+
+These main requirements do not cover two of the four ACID (Atomicity, Consistency, Durability, Isolation) properties of a database: atomicity and consistency. Atomicity, althogh very important on a large commercial application, is extremely hard to achieve in a descentralized system, with the use of complex multi-core rollbacks, and falls out of the scope of this experimental project. Consistency is significant when ensuring data written to the database is valid according to constraints, triggers and cascades, which are originally non-existent in a reduced instruction data store and bring unecessary complexity given the aims of the project.
+
+Lastly another outstanding requirement not implemented is a strong security protocol. Data encryption and authorization have many advantages, but present themselves as unecessary complexity for a small, private, experimental project.
+
 \section{Technologies Used}
-In this project I used mostly the SpiNNaker API, which is split into the Python toolchain, running on the host machine (user's computer) and C code, compiled into machine code to run on the board. A strong knowledge of ARM assembly was also needed, given the low level architecture.
+In this project I used mostly the SpiNNaker API, which is split into the Python toolchain, running on the host machine (user's computer) and C code, compiled into machine code to run on the board.
+The full API can be found at \textit{https://github.com/SpiNNakerManchester}. A strong knowledge of ARM assembly was also needed, given the low level architecture.
  
 These technologies were used to develop the following deliverables:
 \begin{itemize}
@@ -78,7 +94,7 @@ why branches, etc?
 The first half of the project involved developing a distributed key-value store, in which users can insert and retrieve data entries in a dictionary form. This means the user must be able to set keys mapping to values and then retrieve such values when given the same keys, these can be of type \textit{int} or \textit{string}. This section describes in detail the internal processing of the insert (\textit{put}) and retrieve (\textit{pull}) queries. 
 
 \subsection{PUT}
-The \textbf{put} operation is the main way of inserting data onto the SpiDB distributed database. 
+The \textit{put} operation is the main way of inserting data onto the SpiDB distributed database. 
 Upon completion, such operation will store the specified key, mapping to its value, on the memory of an arbitrary chip in the Spinnaker board (as chosen by the \textit{root} core). This operation expects an acknowledgement from the core which stored the entry.
 
 Example usage:
@@ -226,6 +242,7 @@ Complexity: linear to the size of the input, linear to database size.\\\\
 graphs from ui and ui itself 
   
 \section{Out-of-order execution}
+\label{sec:out-of-order}
 As SpiNNaker is a distributed architecture, it may cause many issues and inconsistencies.
 For example, if we try to execute the following code sequence in order:\\
 \begin{lstlisting}[caption={Non-blocking execution}, label=list:non-blocking]

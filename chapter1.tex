@@ -1,23 +1,22 @@
 \chapter{Introduction}
 \label{cha:intro}
 
-This chapter describes a high level view of the SpiNNaker architecture and its main uses. It highlights also the motivation and aims of my project and how it may impact on the improvement of a large scale international research.
+This chapter describes a high level view of the SpiNNaker reasearch and its main uses. It highlights also the motivation and aims of my project and how it may impact on the improvement of a large scale international research.
 
-\section{Background}
-\label{sec:background}
+\section{Overview}
+\label{sec:overview}
 
-"SpiNNaker is a biologically inspired, massively parallel computing engine designed to facilitate the modelling and simulation of large-scale spiking neural networks of up to a billion neurons and trillion synapses (inter-neuron connections) in biological real time." \cite{painkras} The SpiNNaker project, inspired by the fundamental structure and function of the human brain, began in 2005 and it is a collaboration between several universities and industrial partners: University of Manchester, University of Southampton, University of Cambridge, University of Sheffield, ARM Ltd, Silistix Ltd, Thales. \cite{spinnproject} By providing tools to compute the interaction between populations of neurons, SpiNNaker will ideally be capable of simulating a full human brain in the future.
+"SpiNNaker is a biologically inspired, massively parallel computing engine designed to facilitate the modelling and simulation of large-scale spiking neural networks of up to a billion neurons and trillion synapses (inter-neuron connections) in biological real time." \cite{painkras} The SpiNNaker project, inspired by the fundamental structure and function of the human brain, began in 2005 and it is a collaboration between several universities and industrial partners: University of Manchester, University of Southampton, University of Cambridge, University of Sheffield, ARM Ltd, Silistix Ltd, Thales. \cite{spinnproject} A single SpiNNaker board is composed of hundreds of processing cores, allowing it to efficiently compute the interaction between populations of neurons, partially simulating a human brain.
 
 \section{Project Aim}
 \label{sec:aim}
 
-My research project involves making use of the SpiNNaker software stack and hardware infrastructure, both optimised for neural network simulations, in order to explore and evaluate its usability and performance as a general purpose platform. This has been achieved through the development of a distributed Key-Value store and a Relational Database Management System with limited scope.
+This research project involves making use of the SpiNNaker software stack and hardware infrastructure, both optimised for neural network simulations, in order to explore and evaluate its usability and performance as a general purpose platform. This has been achieved through the development of a distributed Key-Value store and a Relational Database Management System with limited scope. 
+This project has grown to be the largest non-neuromorphic application now available as part of the SpiNNaker API.
 
 SpiNNaker is particularly strong at parallel execution at low power consumption, which appealed as an extraordinary opportunity to store and retrieve data in a fast, distributed way, under a database management system. This allows exploration of a broad range of ideas outside of the initial scope of SpiNNaker, testing some of its capabilities and limitations against a non-neuromorphic environment.
 
-In addition to usability testing, performance benchmarks have been gathered for this application, allowing analysis which can provide insights for improvements to the current architecture, possibly influencing on changes to reflect on the next generation of the chip: SpiNNaker 2. This data can also be used to further enhance my application in the future, as it is owned by the SpiNNaker team itself.
-
-This project has grown to be the largest non-neuromorphic application now available as part of the SpiNNaker API.
+In addition to usability testing, an important objective is to gather performance benchmarks for this application, allowing analysis which can provide insights for improvements to the current architecture, possibly influencing on changes to reflect on the next generation of the chip: SpiNNaker 2. This data can also be used to further enhance my application in the future, as it is owned by the SpiNNaker team itself.
 
 \section{SpiNNaker Architecture}
 
