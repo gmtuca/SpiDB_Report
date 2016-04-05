@@ -6,7 +6,7 @@ This chapter describes the development of my database application, SpiDB, from S
 By being part of the SpiNNaker team in Manchester, I was directly exposed to the ongoing research, frequently receiving feedback on my work. The collaboration was effectively bi-directional, as I was able to constantly find, evaluate and fix inconsistencies and bugs in the API not known to the team.
 
 \section{Planning}
-My project imposed a relatively steep learning curve, given the complexity of the low level distributed architecture, still under development. Given this, on the 5th? of September 2015, I attended the 5th? SpiNNaker workshop, where multiple researchers from around the globe gathered for a one week course on the basics of the hardware??. I was then officially introduced to the Manchester team... planning etc.
+The project imposed a relatively steep learning curve, given the complexity of the low level distributed architecture, still under development. Given this, on the 5th? of September 2015, I attended the 5th? SpiNNaker workshop, where multiple researchers from around the globe gathered for a one week course on the basics of the hardware??. I was then officially introduced to the Manchester team... planning etc.
 
 The plan involved splitting my project into two parts: building a NoSQL Key-value store and an SQL based Relational Database.
 
@@ -14,7 +14,7 @@ The plan involved splitting my project into two parts: building a NoSQL Key-valu
 
 key-value then relational
 
-\section{Requirements}
+\subsection{Requirements}
 
 Large, commercial database management systems have a broad range of complex requirements. From these I have selected 4 important concepts which must have strict focus on the SpiDB system:
 
@@ -29,7 +29,9 @@ These main requirements do not cover two of the four ACID (Atomicity, Consistenc
 
 Lastly another outstanding requirement not implemented is a strong security protocol. Data encryption and authorization have many advantages, but present themselves as unecessary complexity for a small, private, experimental project.
 
-\section{Technologies Used}
+\section{Implementation}
+
+\subsection{Technologies Used}
 In this project I used mostly the SpiNNaker API, which is split into the Python toolchain, running on the host machine (user's computer) and C code, compiled into machine code to run on the board.
 The full API can be found at \textit{https://github.com/SpiNNakerManchester}. A strong knowledge of ARM assembly was also needed, given the low level architecture.
  
@@ -39,56 +41,31 @@ These technologies were used to develop the following deliverables:
 	\item \textbf{C}: (2500 lines of code) event driven communication between processors, low level memory management, distributed query processing.
 \end{itemize}
 
-\section{Approach}
+\section{Design}
 
-A tree structure composed of \textit{root}, \textit{branch} and \textit{leaf} nodes. The tree structure presented by my database management system allows a divide and conquer approach to the database query plan. This means when queries are issued by the \textit{host}[definition] and received at the \textit{root}, they are broken down and forwarded for parallel processing through \textit{branch} and \textit{leaf} nodes. eg. COUNT, MAX, MIN, AVG, SUM
+Internally, I designed SpiDB to have a tree structure architecture, composed of \textit{root}, \textit{branch} and \textit{leaf} nodes. This structure allows a divide-and-conquer approach to the database query plan. When queries are issued by the \textit{host} machine, they are received at the \textit{root} core. Such queries are broken down and forwarded to \textit{branch} and \textit{leaf} nodes for parallel processing.
 
-problems:
-sending a large amount of packets with little or no delay xx kills xx the core. sending more than about 4 packets symultaneously at a destination results on a very high packet loss (2/3 of SDP packets get dropped).
+Each chip contains a single central \textit{root} node, which handles incomming packets from host by redirecting them to other cores in an intelligent way. The middle layer is composed of 4 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core or host. Finally the chip is composed of 12 \textit{leaf} nodes, with the aim of actually storing and retrieving database entries (key-value pairs or table rows) on shared memory. These roles can be visualised on figures \ref{fig:tree} and \ref{fig:tree-chip}.
 
+\begin{figure}
+\centering
+\begin{minipage}{1\textwidth}
+  \centering
+  \includegraphics[width=0.9\linewidth, natwidth=618, natheight=120]{images/tree.png}
+  \captionof{figure}{SpiDB tree structure}
+  \label{fig:tree}
+\end{minipage}
+\begin{minipage}{1\textwidth}
+  \centering
+  \includegraphics[width=0.5\linewidth, natwidth=270, natheight=186]{images/tree-chip.png}
+  \captionof{figure}{Role assignments per chip}
+  \label{fig:tree-chip}
+\end{minipage}
+\end{figure}
 
-solutions:...
-delays
-tree structure
-no acknowledgement
+There are two important advantages, in favour of scalability, which lead me to make this design choice. Firstly, as discussed in section XXXX, SpiNNaker communication is unreliable, meaning that a lot of traffic and a central point of failure cause large packet drop rate. This structure strongly reduces the problem, and it assures cores will never receive packets from more than 4 other cores, distributing queries in an efficient way and protecting cores from excessive incomming packets. Secondly this approach is inheritably beneficial for merges and aggregation (eg. sql keywords COUNT, MAX, MIN, AVG, SUM, etc.), as these can be done over different layers over iterations. 
 
-
-complexity
-
-
-This approach has the following advantages (compared to a flat structure)
--a core will only ever receive packets from up to 4 other cores symultaneously (branch: 4, root: 1, leaf: 1), which is the limit of reliability.
--aggregation of results can be done in iterations/stages
-
-disadvantage:
--less leaf nodes (which do the actual work)
-
-LIMITATION:
-no global timer, the maximum we can do is a timer for each chip (collection of 18 cores)
-reliability
-
-COMPLEXITY
-
-limitation:
--single point of failure for each board(mention that it is already like that. no way to avoid).
--SDRAM bandwidth
-
-scalability
-
-message id and all other fields, etc.
-
-each chip, following instances:...
-
-\begin{itemize}
-\item 1x \textit{sark} - monitor process provided by the API to handle low level SpiNNaker operating system functions
-\item 1x \textit{reinjector} - utility process provided by the API to allow automatic re-propagation of dropped multicast packets
-\item 1x \textit{root} - central node which handles direct communication with host machine via UDP and redirects incomming queries to respective cores. 
-\item 3x \textit{branch} - intermediate node which aggregates queries from 4 leaf nodes and communicates back to host via UDP (why 4? because 4 sdp channels?). 
-\item 12x \textit{leaf} - receives insert/retrieve queries from the root, processes the request and then returns result to branch node
-\end{itemize}
-why branches, etc?
-
-%\includegraphics[width=0.8\textwidth, natwidth=794, natheight=1123]{images/spiDB_architecture.png}
+A disadvantage of this design is that less cores perform the actual storage and retrival of data. Out of 16 application cores, 4 are used only for distribution of the query plan (\textit{root} and \textit{branches}). This consequently impacts performance, as each \textit{leaf} node will be assigned more memory to read and will be kept busier with query processing.
 
 \section{Key-value Store}
 The first half of the project involved developing a distributed key-value store, in which users can insert and retrieve data entries in a dictionary form. This means the user must be able to set keys mapping to values and then retrieve such values when given the same keys, these can be of type \textit{int} or \textit{string}. This section describes in detail the internal processing of the insert (\textit{put}) and retrieve (\textit{pull}) queries. 
@@ -150,57 +127,92 @@ Complexity: linear to the size of the input key-value, constant to database size
 
 
 \subsection{PULL}
+The \textit{pull} operation is the main way of retrieving data from the SpiDB distributed database. 
+Upon completion, such operation will return the value mapped by a given key, from an arbitrary chip in the SpiNNaker board, or not respond if such key was not found. This operation expects a response only if the key is present on the database, thus it is an undecidable problem. The reason for this is further explained in XXXX -- design decision
 
+Example usage:
+\begin{lstlisting}
+pull "hello"
+pull 123
+\end{lstlisting}
 
-design decision: pull no reply....
-
- Syntax:
- \noindent
- {\large\textbf{pull} \textit{(int|string)}:key}\\\\
- 
-The \textbf{pull} operation is the main way of retrieving data from the SpiDB distributed database.
-When the operation is issued, the SpiNNaker cores will be coordinated to search for the given key and, if found, the value mapped by it will be returned to host. If the key does not exist, no reply is given, resulting on a timeout on the host (reason for this...). This means 
--disadvantage: expensive if not found
--advantage: less packet drops as less internal communication traffic
- 
-\noindent
- Example usage:\\
- \begin{lstlisting}
- pull "hello"
- pull 123
- \end{lstlisting}
- Assuming successful execution of the put commands above, such pulls would return "world" and "foo" respectively.\\\\
- Complexity: linear to the size of the input, linear to database size.\\\\
-
+Internally the following steps occur:
 \begin{enumerate}
-\item User issues query of format \textit{pull "key"} on host machine
-\item Query and metadata are converted into a byte array, transferred over UDP socket to board
-\item Packet transfer triggers interrupt on \textit{root} core, which issues a \textit{multicast} packet to all \textit{leaf} nodes requesting them to search for occurences of "key"
-\item \textit{leaf} triggers an interrupt
+\item User issues query of format \textit{pull "key"} on host machine.
+\item Query and metadata are converted into a byte array with the following format, transferred via UDP over Ethernet to the board %(figure \ref{fig:host-root}).
+\lstinputlisting[language=C]{code/pullQuery.c}
+Where \textit{SpiDBCommands} represents the pull operation constant, \textit{id} is the query, \textit{info} contains bit encoding of the size and type of the given key, \textit{k} contains the key itself encoded as a byte-array.
+\item Packet triggers interrupt on \textit{root} core, via SDP, and is decoded.
+\item \textit{root} selects one of the following search strategies, based on database type:
 \begin{itemize}
-\item If a \textit{leaf} node identifies "key" by scanning linearly through SDRAM, it responds to host (branch...?) with mapped value
-\item Else no response is sent, yielding timeout on host (reason for this!!!...?)
+	\item \textbf{Naive}: there is no knowledge of which, if any, chip contains the given key. Therefore \textit{root} issues a multicast packet to all \textit{leaf} nodes on the board, requesting them to linearly scan their regions of shared memory, searching for the entry.
+	\item \textbf{Hashing}: the key is used to produce a 32-bit hash value, which, if existent on the database, must be present at the memory of a specific core, pointed by the decoding of such hash value. Therefore \textit{root} node sends a single SDP packet to chosen \textit{leaf}, requesting it to search for the given key.
 \end{itemize}
+\item Each \textit{leaf} node that received a search request triggers an interrupt and searches for key-value mapping in SDRAM memory. If key is found, value is returned over UDP back to host.
+\item User receives timing information and query result.
 \end{enumerate}
 
+Complexity: linear to the size of the input, linear to database size.
 
-(benchmarking in chapter 3)
-how the data is actually stored?
+Algorithms \ref{alg:root} and \ref{alg:leaf} show a high level simplification of code running in the \textit{root} and \textit{leaf} nodes, as described above, through the event driven application, implementing \textit{put} and \textit{pull} operations.
 
-SQL:
-column based?
+\begin{algorithm}
+\caption{Root core}
+\label{alg:root}
+\begin{algorithmic}[1]
+\Procedure{onReceive}{$sdp$}
+	\If{$sdp.command$ \textbf{is} $PUT$}
+		\If{$DB\_TYPE$ \textbf{is} $NAIVE$}
+			\State forward $PUT$ query to next core (Round-robin)
+		\ElsIf{$DB\_TYPE$ \textbf{is} $HASH$}
+			\State $h \gets hash(sdp.key)$
+			\State $chipx \gets h[0:7]$
+			\State $chipy \gets h[8:15]$
+			\State $core \gets h[16:24]$
+			\State forward sdp $PUT$ query to (chipx, chipy, core)
+		\EndIf
+	\EndIf
 
-bandwidth (max) vs throughput (actual)
+	\If{$sdp.command$ \textbf{is} $PULL$}
+		\If{$DB\_TYPE$ \textbf{is} $NAIVE$}
+			\State issue multicast $PULL$ to all cores in the system
+		\ElsIf{$DB\_TYPE$ \textbf{is} $HASH$}
+			\State $h \gets hash(sdp.key)$
+			\State $chipx \gets h[0:7]$
+			\State $chipy \gets h[8:15]$
+			\State $core \gets h[16:24]$
+			\State forward sdp $PULL$ query to (chipx, chipy, core)
+		\EndIf
+	\EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
+\begin{algorithm}
+\caption{Leaf core}
+\label{alg:leaf}
+\begin{algorithmic}[1]
+\Procedure{onReceive}{$sdp$}
+	\If{$sdp.command$ \textbf{is} $PUT$}
+		\State store $sdp.key$ and $sdp.value$ in SDRAM
+	\EndIf
 
-identifies
-flow control of:
-put
-pull
-etc.
-
-Upon completion of the project, 
-
+	\If{$sdp.command$ \textbf{is} $PULL$}	
+		\State $entry \gets SDRAM[0]$
+		\State $i \gets 0$		
+		
+		\While{$entry$ \textbf{is not null}}
+			\If{$entry.key$ \textbf{is} $sdp.key$}
+				\State send response to host with $sdp.value$
+				\State \textbf{return}
+			\EndIf
+			\State $entry \gets SDRAM[i]$
+			\State $i \gets i+1$
+      	\EndWhile
+	\EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 \section{Relational Database}
 
@@ -240,11 +252,44 @@ Complexity: linear to the size of the input, linear to database size.\\\\
 \section{User Interface} 
 
 graphs from ui and ui itself 
-  
-\section{Out-of-order execution}
+
+
+\section{Testing and Debugging}
+I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start.
+
+Realtime debugging on the SpiNNaker board is relatively hard, but luckly the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug}, also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality.\cite{ybug} [link]
+
+\begin{figure}
+  \centering
+  \includegraphics[width=1.3\linewidth, natwidth=1366, natheight=768]{images/debugging.png}
+  \captionof{figure}{Debugging}
+  \label{fig:debugging}
+  \centering
+  \includegraphics[width=1.3\linewidth, natwidth=1366, natheight=768]{images/testing.png}
+  \captionof{figure}{Testing}
+  \label{fig:testing}
+\end{figure}
+
+
+
+\subsection{Row-based vs Column-based}
+
+\section{Challenges}
+This section outlines a list of different challenges and problems I had to face during the development of the application and how they influenced decision making.
+
+
+design decision: pull no reply....
+-disadvantage: expensive if not found
+-advantage: less packet drops as less internal communication traffic
+
+\subsection{Scalability}
+...tree structure...
+no acknowledgements
+
+\subsection{Out-of-order execution}
 \label{sec:out-of-order}
-As SpiNNaker is a distributed architecture, it may cause many issues and inconsistencies.
-For example, if we try to execute the following code sequence in order:\\
+A multi-threaded system must account for the fact that queries may not be executed in the order they are issued, which can be a concern depending on the application. As SpiNNaker is a distributed architecture, it cause problems and inconsistencies.
+For example, using SpiDB, if we try to execute the following code sequence in order:\\
 \begin{lstlisting}[caption={Non-blocking execution}, label=list:non-blocking]
 put "hello" "world"
 pull "hello"
@@ -272,55 +317,34 @@ pull "life"
 pull 123
 \end{lstlisting}
 
-It is worth noting that although non-block operations can cause out-of-order execution, it does not occur very frequently. This is because, when transmitting data to the board, queries are serialised over ethernet in order of appearence and in addition there is a small forced transmission delay between these packets. This will be further discussed on chapter 3.%\autoref{cha:eval}.
-
-\section{Testing and Debugging}
-I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start.
-
-Realtime debugging on the SpiNNaker board is relatively hard, but luckly the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug}, also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality.\cite{ybug} [link]
-
-\begin{figure}
-  \centering
-  \includegraphics[width=1.3\linewidth, natwidth=1366, natheight=768]{images/debugging.png}
-  \captionof{figure}{Debugging}
-  \label{fig:debugging}
-  \centering
-  \includegraphics[width=1.3\linewidth, natwidth=1366, natheight=768]{images/testing.png}
-  \captionof{figure}{Testing}
-  \label{fig:testing}
-\end{figure}
+It is worth noting that although non-block operations can cause out-of-order execution, it does not occur very frequently. This is because, when transmitting data to the board, queries are serialised over ethernet in order of appearence and in addition there is a small forced transmission delay between these packets. This will be further discussed on chapter 3 \ref{cha:eval}.
 
 
-\section{Bugs}
-I have been one of the few users of a large amount of the SpiNNaker API, currently under contruction. This means some of it has not been fully tested, resulting in strange behaviour at times, making debugging of my own application difficult.
+\subsection{Unreliable communication}
 
-blah blah test usability
-particularly
+\subsection{API Bugs}
+I have been one of the few users of a large amount of the SpiNNaker API, currently under contruction. This means some of it has not been fully tested, resulting in strange behaviour at times, making debugging of my own application difficult. Besides aiming to gather benchmarks for SpiNNaker, my project itself has been very useful when exposing unexpected errors or inconsistencies in the team's codebase.
 
-Although not being directly part of the project, 
+Facing these issues was certainly a challenge, as they belonged to domains I had little knowledge of. I was a good opportunity for me to learn and improve code quality of a large, collaborated project, by testing its usability and evaluating its outputs. This means my project involved not only developing the database application itself, but also collaborating to improve SpiNNaker itself.
 
-MENTORING
+The main API bugs I exposed and helped resolve were:
 
 \begin{itemize}
-\item \textbf{Duplicate packets:} when multiple distinct SDP packets were sent from different sources to the same destination, strangely the receiving core would read the same packet duplicated a number of times. This behaviour was unexpected, so upon extensive testing and collaboration from the team, I was able to point the issue to a running processor binary named \textit{reinjector} and resolve the issue. 
+\item \textbf{Duplicate packets}: when multiple distinct SDP packets were sent from different sources to the same destination, strangely the receiving core would read the same packet duplicated a number of times. This behaviour was highly unexpected to the team, so upon extensive testing, I was able to point the issue to a running processor named \textit{reinjector}, in charge of re-issuing lost packets, and resolve the problem. 
 
-\item \textbf{Data Specification Error:} when uploading binaries to the board, sometimes cores would crash with the SWERR state. After giving the team detailed feedback on the issue, this was found to be caused by the SpiNNaker Data Specification framework, which handles allocation of data in shared RAM.
+\item \textbf{Data Specification Error}: when uploading binaries to the board, sometimes cores would crash with an internal error state (SWERR), upon evaluating and providing the team with detailed feedback on the issue, I found this to be caused by the SpiNNaker Data Specification framework, which handles allocation of data in shared RAM.
 
 \item algorithms
 
 \end{itemize}
 
-From planning, design, testing, development, code review, etc. presentation of results to members of the Spinnaker team
+%meeting every fortnight
 
-It outlines also my approach and design choices with their advantages/disadvantages with the hardware and specification. (eg. no acknowledgements)
-Approval from members of the SpiNNaker team.
+%Thomas, etc.
+%tutoring! kind of did it really MENTORING
 
-Strengths and weaknesses (limitations) of spinnaker
-...
-Thomas, etc.
-tutoring! kind of did it really
+%Bizantine protocol
 
-...upload different programs to run on each core.
-Thus each chip contains the following instances: 
 
-Bizantine protocol
+
+
