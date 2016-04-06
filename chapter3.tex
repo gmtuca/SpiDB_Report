@@ -24,11 +24,11 @@ Upon experimenting, I found that sending a large amount of consecutive, immediat
 \label{table:sdp_deliveries}
 \end{table}
 
-Note that the experiment, made on SpiNN-3, involved sending a single point-to-point packet multiple times to the same destination on the same chip, containing only the 8 byte SDP header. The destination did not store or read the packet contents, only incrementing a counter upon packet receival. This was used to show the maximum possible transmission rate allowed by the SDP protocol under the hardware communication fabric. Code snippets and more information can be found on the appendix under section \ref{sec:appendix_comm_rel}.
+Note that the experiment, made on SpiNN-3, involved sending a single SDP packet multiple times to the same destination on the same chip, containing only the 8 byte SDP header. The destination did not store or read the packet contents, only incrementing a counter upon packet receival. This was used to show the maximum possible transmission rate allowed by the SDP protocol under the hardware communication fabric. Code snippets and more information can be found on the appendix under the appendix section \ref{sec:appendix_comm_rel}.
 
 Ideally these packets would send useful information, to be read upon arrival, which would keep the destination busy. From my experience and input from the team, the best way to achieve this is by immediately storing the SDP packet contents into a buffer when it is received and then handling it at a different point in time (listing \ref{lst:sdp_packet_callback}). The reason for this is that if another packet arrives as we are processing the current packet with same or higher priority, the incomming packet will drop.
 
-High priority should be assigned to storing incomming packets into a buffer and the actual processing should have lower priority, as it can be handled at a later point in time. It is important to note that this can cause starvation and buffer overflow if there are too many immediate packets being received. For instance, if our SDP packet is of size 12-byte (8-byte header + 32-bit data) and stored into a buffer in DTCM upon receival, we would only ever be able to hold up to about 5,000 messages at once (64-Kbytes DTCM size / 12-byte packet size). Realistically a large part of DTCM contains the stack, local and global variables, so that number will be drastically reduced. In my application, SpiDB, insert and retrieve database queries have a size of 256-bytes, which means a limit of 250 entries in the buffer if DTCM were empty.
+High priority should be assigned to storing incomming packets into a buffer and the actual processing should have lower priority, as it can be handled at a later point in time. It is important to note that this can cause starvation and buffer overflow if there are too many immediate packets being received. For instance, if our SDP packet is of size 12-byte (8-byte header + 32-bit data) and stored into a buffer in private DTCM memory upon receival, we would only ever be able to hold up to about 5,000 messages at once (64-Kbytes DTCM size / 12-byte packet size). Realistically a large part of DTCM contains the stack, local and global variables, so that number will be drastically reduced. In my application, SpiDB, insert and retrieve database queries have a size of 256-bytes, which means a limit of 250 entries in the buffer if memory were empty.
 
 This evaluation is important because it allows finding the optimal transmission delay for an application. A developer on SpiNNaker using the point-to-point protocol needs to find the balance between transmission rate and reliability, which are inversely proportional. This balance is application dependent.
 
@@ -36,7 +36,7 @@ This evaluation is important because it allows finding the optimal transmission 
 
 On SpiDB, I experimented with different time delays when transmitting packets from host over ethernet to a core on SpiNNaker, in order to find the best evaluation. The speed of one operation is calculated as the time of successful reply minus the time that operation was sent from host, thus being a round-trip-time plus internal processing time. The performance is calculated as the amount of operations successfully executed in one second.
 
-As can be seen on figure \ref{fig:transmission-delay}, large packet transmission delays of 50-100$\mu$s cause only a bottleneck, as they do not reduce packet drops, while being a high cost on performance. Naturally the more packets we can send in one second influences the speed of replies, thus improving performance. This hits a maxima at 40$\mu$s, with almost 10,000 op/sec, in which transmission is at a high rate with no loss of reliability. Transmission delays between 40-10$\mu$s result on a decrease of performance, because although packets are sent more frequently, a lot of them are dropped (up to about 35\%), being also extremely unreliable. We reach the worst case at 10-5$\mu$s delay, when the destination core cannot cope with the speed on incomming packets, simply crashing and ceasing to respond. This SpiDB experiment was performed with 100,000 \textit{put} operations with keys and values of size 4-bytes each. More information on the data gathered can be found on the appendix under section \ref{sec:appendix_comm_rel}.
+As can be seen on figure \ref{fig:transmission-delay}, large packet transmission delays of 50-100$\mu$s are redundant, as they do not reduce packet drops, while being a high cost on performance. Naturally the more packets we can send in one second influences the speed of replies, thus improving performance. This hits a maxima at 40$\mu$s, with almost 10,000 op/sec, in which transmission is at a high rate with no loss of reliability. Transmission delays between 40-10$\mu$s result on a decrease of performance, because although packets are sent more frequently, a lot of them are dropped (up to about 35\%), being also extremely unreliable. We reach the worst case at 10-5$\mu$s delay, when the destination core cannot cope with the speed of incomming packets, simply crashing and ceasing to respond. This SpiDB experiment was performed with 100,000 \textit{put} operations with keys and values of size 4-bytes each. More information on the data gathered can be found on the appendix under section \ref{sec:appendix_comm_rel}.
 
 \begin{figure}
 \begin{center}
@@ -79,54 +79,23 @@ The \textbf{memcached} and \textbf{Redis} benchmarks were run on an ASUS X555L q
 -no global timer (gathering performance info...)
 
 \section{Predictions}
-
-
-
-
-put operations
-acknowledgements
-
 THIS TAKES 1microsecond using the watchdog timer.
 
-callback priorities etc.
-
-cannot possibly do more than that...????
-ARM968 at only 180MHz (I think)
-
 response times. why are they so high sometimes?!?!
--first explain how we gather the time (operating system could be interrupting, sark, etc.)
-
-
-In the assumption that the programmer needs to store XX into a buffer XXX
-at least 32 bits of data, that means the packet size of 12 bytes.
-
-
-The SpiNNaker communication fabric is known for being unreliable, which reflects the way the human brain acts, in a way that neuron spikes are not reliable... (why???)
-
-single source, multiple destinations is also bad!
-
-why does this happen?
-
-single source, multiple destinations
-
-always lose 77...
-
-maybe more reliability with a layer on top of UDP, which would be more expensive/slow
-
-aim: balance of memory and processing power on the chip, etc.
-
+first explain how we gather the time (operating system could be interrupting, sark, etc.)
 This would ideally allow a linear speedup of data retrival in comparison with a sequential system.
 
-
 \section{Future work}
-future work...
-cache (on DTCM)
-aggregation
-CGI server
-self balancing when IDLE (ie. move data to cores with less data, if a table is about to get full, move data around it's SDRAM) --- user typing = a long time
-million core machine
-improve parser
-allow longer queries in (more than 256 bytes)
-additional operations eg. delete, update, etc,...
-more reliability
-ACID properties
+This project has been the tip of the iceberg of what a fully-functional SpiNNaker database management system can be, involving mostly research and simple operations to evaluate its performance. All code written by me is now part of the official open-source SpiNNaker API, available to the team and any developers interested. This means SpiDB is likely to expand in the future or serve as an example application running on SpiNNaker, accessible to researchers around the globe.
+
+These are some features which can be implemented or improved in the future:
+
+\begin{itemize}
+	\item \textbf{Caching} and \textbf{indexing}: frequently accessed areas of shared SDRAM memory could be cached at the smaller but much faster private DTCM.
+	\item \textbf{Security} and \textbf{multi-user access}: different sections of the database can have restricted access through credentials checking.
+	\item \textbf{Scalability testing} on the large scale million core machine.
+	\item An application \textbf{server} allowing queries to be requested over the internet on different locations.
+	\item Improve \textbf{reliability} and increase \textbf{query sizes}, perhaps by implementing a protocol on top of the \textit{SDP} and \textit{MC} layer. As of now packets are limited to 256-bytes, with unreliability during busy times.
+	\item \textbf{Self balancing} during idle times. While no queries are being executed, cores could distribute their contents in a balanced way for faster retrival. Indexing or other pre-processing could also be executed on the meantime.
+	\item \textbf{Additional operations} supporting table merges, triggers and aggregations.
+\end{itemize}

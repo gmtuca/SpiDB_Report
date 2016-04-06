@@ -41,7 +41,7 @@ The SpiNNaker chip contains two silicon dies: the SpiNNaker die itself and a 128
 
 Each ARM core within the chip follows a 32-bit Harvard Architecture, holding a private 32-KB instruction tightly coupled memory (ITCM) and 64-KB data tightly coupled memory (DTCM).\cite{painkras} It has a small peak power consumption of 1-W at the nominal clock frequency of 180-MHz.\cite{arm968}
 
-There are currently two types of SpiNNaker boards: \textbf{SpiNN-3} (figure \ref{fig:4node}), composed of 4 chips, thus a total of 72 processing cores, and \textbf{SpiNN-4} (figure \ref{fig:48node}), composed of 48 chips, this a total of 864 processing cores.
+There are currently two types of SpiNNaker boards: \textbf{SpiNN-3} (figure \ref{fig:4node}), composed of 4 chips, thus a total of 72 processing cores, and \textbf{SpiNN-4} (figure \ref{fig:48node}), composed of 48 chips for a total of 864 processing cores.
 
 \begin{figure}
 \centering
@@ -60,57 +60,21 @@ There are currently two types of SpiNNaker boards: \textbf{SpiNN-3} (figure \ref
 \end{figure}
 
 \subsection{SpiNNaker Communication fabric}
+Cores on a SpiNNaker board exchange packets through wired connections over a large communication fabric. Each SpiNNaker chip is surrounded by a lightweight, packet-switched asynchronous communication infrastructure.\cite{spinnchip} Packet exchange can be used to transmit information initially private to a core and it is managed under the API's even driven architecture, thus incomming packets issue an interrupt on the receiving core.
 
-The boards contain also a router, which manages inter-chip communication 
-
-
-surrounded by a lightweight, packet-switched asynchronous communication infrastructure.
-
-explain host computer, etc..
-
-
-event driven architecture
-donught shaped
-
-
-XXXX should this be on the introduction???
-event driven
-
-The SpiNNaker API allows the utilisation of 4 different communication protocols between cores in the system. These packets trigger prioratised interrupts on the receiver, as it is an event driven architecture. These can be used to spread work load and transmit information initially private to a core.
-It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsen if there is large traffic in the communication fabric. This means sending a large amount of packets symultaneously will result on packet drops.
+There are currently 4 different communication protocols in the system. It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsen if there is increased traffic in the communication fabric. Sending a large amount of packets symultaneously is likely to result on packet drops.
 
 \begin{itemize}
-\item \textbf{Multicast (MC)}
-The MC protocol, originally designed to simulate neural spikes, predicts a sigle source core casting a packet to multiple destinations. The packet contains only a 32 bit routing key, used by an external process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
+\item \textbf{Multicast (MC)}: The \textit{MC} protocol, originally designed to simulate neural spikes, is used when a sigle source issues information to multiple destinations (one-to-many). The packet contains a 32 bit routing key, used by an external router process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
 
-router.. routing table
-\item \textbf{Point to Point (P2P)}
-XXX
-On top of the P2P layer, the SpiNNaker Datagram Protocol (SDP) was developed (build/written?) to allow larger transfers of data, of up to 280 (?) bytes, to reduce queueing on receival... (find the paper...)
-%https://spinnaker.cs.man.ac.uk/tiki-download_wiki_attachment.php?attId=16
+\item \textbf{Point to Point (P2P)}: \textit{P2P} packets have a single source and a single destination core (one-to-one). Each packet contains a 16-bit source ID, destinarion ID and an optional 32-bit payload.\cite{datasheet}
+On top of this layer, the SpiNNaker Datagram Protocol (\textit{SDP}) was designed to allow transfers of up to 256-bytes of data between two cores, by sending a sequence of \textit{P2P} packets with payloads.\cite{sdp} \textit{SDP} can be used to communicate to the \textit{host} machine, wrapped around a larger \textit{UDP} packet.
 
-Using SDP, the SpiNNaker API XXX a User Datagram Protocol (UDP), allowing a two-way communication over IP addresses with the host machine. This allows uploading binaries and communicating back and forth with the hardware.
+\item \textbf{Nearest-neighbour (NN)}: Under the \textit{NN} protocol, packets issued at a chip are delivered to the Monitor Processors of each of its 6 neighbours (one-to-many) according to the board's connections. \textit{NN} packets contain a 32-bit payload and a 32-bit address/operation field.\cite{datasheet}
 
-unreliability....
-unreliable spikes (see that guy's paper...)
-
-\item \textbf{Nearest-neighbour (NN)}
-\item \textbf{Fixed-route (FR)}
+\item \textbf{Fixed-route (FR)}: \textit{FR} packets use the same mechanism as \textit{MC}, without a key field. Packets being routed by the contents of a register instead of a routing key. 
 \end{itemize}
 
-[spinnaker datasheet page 30]
-
--mention DTCM only 64kb (so preferred to use SDRAM)
--look at your logbook for query plan stuff (at the start)
--debugging with ybug. testing with unit tests
--supported operations
--host is stateless
--tested on real data?
-
-Each processor node on SpiNNaker includes a communication controller which is responsible for generating and receiving packets to and from the communication network.
-The SpiNNaker architecture offers a range of...
-all of which are unreliable!!
-
-packet formats:
+My database application makes extensive use of the \textit{SDP} protocol, alongside \textit{MC}.
 
 

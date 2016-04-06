@@ -32,8 +32,7 @@ Lastly another outstanding requirement not implemented is a strong security prot
 \section{Implementation}
 
 \subsection{Technologies Used}
-In this project I used mostly the SpiNNaker API, which is split into the Python toolchain, running on the host machine (user's computer) and C code, compiled into machine code to run on the board.
-The full API can be found at \textit{https://github.com/SpiNNakerManchester}. A strong knowledge of ARM assembly was also needed, given the low level architecture.
+The project implementation makes extensive use of the SpiNNaker API for development, which is split into the Python toolchain, running on the \textit{host} machine (user's computer), and C code, compiled into machine code to run on the board. The full API can be found at \textit{https://github.com/SpiNNakerManchester}. A strong knowledge of ARM assembly was also needed, given the low level architecture.
  
 These technologies were used to develop the following deliverables:
 \begin{itemize}
@@ -43,9 +42,9 @@ These technologies were used to develop the following deliverables:
 
 \section{Design}
 
-Internally, I designed SpiDB to have a tree structure architecture, composed of \textit{root}, \textit{branch} and \textit{leaf} nodes. This structure allows a divide-and-conquer approach to the database query plan. When queries are issued by the \textit{host} machine, they are received at the \textit{root} core. Such queries are broken down and forwarded to \textit{branch} and \textit{leaf} nodes for parallel processing.
+Internally, I designed SpiDB to have a hierarchical tree structure architecture, composed of \textit{root}, \textit{branch} and \textit{leaf} nodes/cores. This structure allows a divide-and-conquer approach to the database query plan. When queries are issued by the \textit{host} machine, they are received at the \textit{root} core.
 
-Each chip contains a single central \textit{root} node, which handles incomming packets from host by redirecting them to other cores in an intelligent way. The middle layer is composed of 4 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core or host. Finally the chip is composed of 12 \textit{leaf} nodes, with the aim of actually storing and retrieving database entries (key-value pairs or table rows) on shared memory. These roles can be visualised on figures \ref{fig:tree} and \ref{fig:tree-chip}.
+Each chip contains a single \textit{root} node, which handles incomming packets from \textit{host} by redirecting them to \textit{branch} and \textit{leaf} nodes, in an intelligent way, for parallel processing. The middle layer is composed of 4 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core. Finally the chip is composed of 12 \textit{leaf} nodes, with the aim of actually storing and retrieving database entries (key-value pairs or table rows) on shared memory. These roles can be visualised on figures \ref{fig:tree} and \ref{fig:tree-chip}. The 2 remaining cores are used for internal use of the system (\textit{sark} and \textit{reinjector}), omitted from these figures.
 
 \begin{figure}
 \centering
@@ -63,12 +62,12 @@ Each chip contains a single central \textit{root} node, which handles incomming 
 \end{minipage}
 \end{figure}
 
-There are two important advantages, in favour of scalability, which lead me to make this design choice. Firstly, as discussed in section XXXX, SpiNNaker communication is unreliable, meaning that a lot of traffic and a central point of failure cause large packet drop rate. This structure strongly reduces the problem, and it assures cores will never receive packets from more than 4 other cores, distributing queries in an efficient way and protecting cores from excessive incomming packets. Secondly this approach is inheritably beneficial for merges and aggregation (eg. sql keywords COUNT, MAX, MIN, AVG, SUM, etc.), as these can be done over different layers over iterations. 
+There are two important advantages, in favour of scalability, which lead me to make this design choice. Firstly, as discussed in section XXXX, SpiNNaker communication is unreliable, meaning that a lot of traffic and a central point of failure cause large packet drop rate. This hierarchical structure strongly reduces the problem, and it assures cores will never receive packets from more than 4 other cores, distributing queries in an efficient way and protecting cores from excessive incomming packets. Secondly this approach is inheritably beneficial for merges and aggregation (eg. sql keywords COUNT, MAX, MIN, AVG, SUM, etc.), as these can be done on different layers over iterations. 
 
 A disadvantage of this design is that less cores perform the actual storage and retrival of data. Out of 16 application cores, 4 are used only for distribution of the query plan (\textit{root} and \textit{branches}). This consequently impacts performance, as each \textit{leaf} node will be assigned more memory to read and will be kept busier with query processing.
 
 \section{Key-value Store}
-The first half of the project involved developing a distributed key-value store, in which users can insert and retrieve data entries in a dictionary form. This means the user must be able to set keys mapping to values and then retrieve such values when given the same keys, these can be of type \textit{int} or \textit{string}. This section describes in detail the internal processing of the insert (\textit{put}) and retrieve (\textit{pull}) queries. 
+The first half of the project involved developing a distributed key-value store, in which users can insert and retrieve data entries in a dictionary form. This means the user must be able to set keys mapping to values, both of type \textit{int} or \textit{string}, and retrieve such values when given the same keys. This section describes in detail the internal processing of the insert (\textit{put}) and retrieve (\textit{pull}) queries. 
 
 \subsection{PUT}
 The \textit{put} operation is the main way of inserting data onto the SpiDB distributed database. 
@@ -87,11 +86,11 @@ Internally the following steps occur:
 \item User issues query of format \textit{put "key" "value"} on host machine.
 \item Query and metadata are converted into a byte array with the following format, transferred via UDP over Ethernet to the board (figure \ref{fig:host-root}).
 \lstinputlisting[language=C]{code/putQuery.c}
-In this case \textit{SpiDBCommands} is set to the constant representing the put operation, \textit{id} identifies every query uniquely, \textit{info} contains bit encoding of the size and type of both key and value, \textit{k\textunderscore v} contains both entries appended.
+In this case \textit{SpiDBCommands} is set to the constant representing the put operation, \textit{id} identifies every query uniquely, \textit{info} contains bit encoding of the size and type of both key and value, \textit{k\textunderscore v} contains key and value appended.
 \item Packet arrival triggers interrupt on \textit{root} core, via the SDP protocol, and is decoded.
 \item \textit{root} selects a \textit{leaf} core to store the data entries in one of the following ways, specified by the user:
 \begin{itemize}
-	\item \textbf{Naive}: As packets arrive, they are assigned to a different \textit{leaf} node in a Round-Robin manner.
+	\item \textbf{Naive}: as packets arrive, they are assigned to a different \textit{leaf} node in a Round-Robin manner.
 	\item \textbf{Hashing}: the given key is used to produce a 32-bit hash value, which is decoded to assign the query to a specific \textit{leaf} node.
 \end{itemize}
 \item \textit{root} communicates to chosen \textit{leaf} node with \textit{put} contents via SDP (figure \ref{fig:root-leaf}).
@@ -218,25 +217,25 @@ Algorithms \ref{alg:root} and \ref{alg:leaf} show a high level simplification of
 The second half of the project involves developing an SQL-based distributed database on top of the key-value store layer. Entries are stored in a structured way, bounded by the definition of tables. In this RDMS users can create tables with different fields, insert values and retrieve them with given conditions. This section describes in detail the internal processing of the \textit{create}, \textit{insert} and \textit{select} queries. 
 
 \subsection{CREATE}
-Data entries in the RDMS must be assigned a field from a specific table. In SpiDB, the \textit{create} operation is used to generate a table definition in the SpiNNaker hardware. The user is allowed to chose the table name, field names and their types (\textit{int} or \textit{string}). Multiple distinc tables can be created and any entries inserted or retrieved must specify a table name for mapping. 
+In SpiDB, the \textit{create} operation is used to generate a table definition in the SpiNNaker hardware. Data can only be inserted into the database if a corresponding table exists. This query has as parameters the table name, field names and their types (\textit{int} or \textit{string}). Multiple distinct tables can be issued symultaneously, although they are handled by a single core. 
 This operation expects an acknowledgement from the \textit{root} core, which sets the failure flag if the table definition already exists.
 
 Example usage:
 \begin{lstlisting}
 CREATE TABLE Dogs(name varchar(10), owner varchar(35), age integer);
-CREATE TABLE People(id integer, name varchar(35), lastname varchar(20));
+CREATE TABLE People(name varchar(35), lastname varchar(20));
 \end{lstlisting}
 
 Internally the following steps occur:
 \begin{enumerate}
 \item User issues query of format \textit{CREATE TABLE name(column1 type(size), ...)} on host machine.
-\item Query and metadata are converted into a byte array and sent to the board (format can be found on section \ref{sec:appendix-queries}).
+\item Query and metadata are converted into a byte array and sent to the board (format can be found on appendix section \ref{sec:appendix-queries}).
 \item \textit{root} core receives and decodes SDP packet.
 \item If table does not exist on the database yet, \textit{root} core stores table definition and metadata in its region of shared SDRAM, accessible by other cores for insert/retrieve operations. 
 \item \textit{root} core sends acknowledgement back and information is displayed to the user.
 \end{enumerate}
 
-Complexity: linear to the size of the input, constant to database size.\\\\
+Complexity: linear to the size of the input, constant to database size.
    
 \subsection{INSERT}
 New values can be added to the database management system through the \textit{INSERT} query. A single entry is an \textit{int} or \textit{string} value assigned to a column on a given table at a new row. Multiple entries can be safely inserted concurrently, as they are distributed across different cores. This operation expects an acknowledgement from the \textit{leaf} node in charge of storing the value and metadata, with the failure flag set if memory is full.
@@ -245,15 +244,15 @@ Example usage:
 \begin{lstlisting}
 INSERT INTO Dogs(name,owner,age) VALUES ("Toddy","Arthur",8);
 INSERT INTO Dogs(name,owner,age) VALUES ("Guto","Arthur",10);
-INSERT INTO People(name,lastname) VALUES ("Tuca","Ceccotti");
+INSERT INTO People(name,lastname) VALUES ("Arthur","Ceccotti");
 INSERT INTO People(name,lastname) VALUES ("Canny","Dattlin");
 \end{lstlisting}
 
 Internally the following steps occur:
 \begin{enumerate}
 \item User issues query of format \textit{INSERT INTO table(column1, ...) VALUES (value1, ...)} on host machine.
-\item Query is broken down into column-value pairs, containing also value type, size and specified table. This is necessary because SDP packets have a limit size of 256-bytes, thus not being able to carry one single large packet containing all the assignments for a table row. Streaming smaller packets also improves reliability.
-\item Column-value pairs (entries) are converted into a byte array, sent to the board, being received and decoded at the \textit{root} node.
+\item Query is broken down into column-value pairs, containing also value type, size and specified table (eg. ["name":("Arthur", type: string, size: 6)]). This step is necessary because SDP packets have a limit size of 256-bytes, thus not being able to carry one single large packet containing all the assignments for a table row. Streaming smaller packets also decreases the need for a large storage buffer at the destination.\cite{sdp}
+\item Column-value pairs (entries) are converted into a byte array, sent to the board, being received and decoded by the \textit{root} node.
 \item The column-value pair query is forwarded to a \textit{leaf} node in a Round-Robin way.
 \item \textit{leaf} node receives query, checks if specified table exists in shared memory SDRAM and reads its definition.
 \item \textit{leaf} node stores column-value pair into a new row in reserved region for given table. The SpiDB RDMS is row-based, thus entire rows are stored consecutively in a structured way at all cores.
@@ -263,9 +262,9 @@ Internally the following steps occur:
 Complexity: linear to the size of the input, constant to database size.
 
 \subsection{SELECT}   
-In the SpiDB RDMS, multiple entries from a table can be retrieved using the \textit{SELECT} query, following the standard SQL syntax. Selection criteria can be specified by the user and matching results are streamed until timeout is reached. If no value in the table matches such criteria, there will be no response from the board. This is a consequence of not making use of internal acknowledgements, as discussed in section XXX. The select query has the capability of producing a very large amount of traffic in the system.
+In the SpiDB system, multiple entries from a table can be retrieved using the \textit{SELECT} query, following the standard SQL syntax. Selection criteria can be specified by the user and matching results are streamed until a timeout is reached. If no value in the table matches such criteria, there will be no response from the board, which is a consequence of not making use of internal acknowledgements, as discussed in section XXX. This is a similar behaviour to \textit{pull} requests. 
 
-This is the only query supported by SpiDB with a variable number of returned packets. All other queries have at most one acknowledgement/return per incomming packet. 
+The select query has the capability of producing a very large amount of traffic in the system, as it is the only query with a variable number of packets returned. All other queries have at most one acknowledgement per incomming packet. 
 
 Example usage:
 \begin{lstlisting}
@@ -281,7 +280,7 @@ Internally the following steps occur:
 \item Upon receival, \textit{root} node issues a multicast packet to every \textit{leaf} node on the board, requesting search for all rows which match the WHERE criteria.
 \item Every \textit{leaf} node linearly checks appropriate condition and forwards matching column-value pairs on packets to their appropriately assigned \textit{branch} nodes.
 \item \textit{branch} nodes aggregate fields if requested, controls speed of execution and sends packet to host with such entry definition.
-\item User receives an arbitrary amount of entries, displayed as a table of results. If no entries in the database match the given condition, no acknowledgement is returned, triggering a timeout. This is a similar behaviour to \textit{pull} requests.
+\item User receives an arbitrary amount of entries, displayed as a table of results.
 \end{enumerate}
 
 Complexity: linear to the size of the input, linear to database size.
@@ -293,22 +292,48 @@ wrote my own parser...
 
 
 \section{Testing and Debugging}
-I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start.
+I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start. Running tests can be seen in figure \ref{fig:testing}. Testing and development was done from the bottom up, starting from internal memory management, core communication and finally the user interface and host communication.
+Testing involved initially a number of insert queries with different types and sizes. Given the SpiNNaker architecture is word aligned, it was important to test boundaries along data sizes along multiples of 4 bytes. Examples of tests run can be seen on table \ref{table:tests}.
+Both the key-value store and the SQL-RDMS were also tested for their performance and scalability, running over 100,000 symultaneous incomming queries with real data pulled from a modern English vocabulary. The results from these experiments can be read on chapter \ref{cha:eval}.
 
-Realtime debugging on the SpiNNaker board is relatively hard, but luckly the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug}, also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality.\cite{ybug} [link]
+\begin{table}
+\begin{tabular}{ l | l | l | l | l }
+\textbf{Operation} & \textbf{arg1} & \textbf{arg2} & \textbf{expected result} & \textbf{reason} \\
+PUT & "hello" & "world" & success & \\
+PUT & "foo" & "bar" & success & \\
+PUT & "A" & "B" & success & \\
+PUT & 42 & "life" & success & \\
+PUT & "abc" & 123 &  success & \\
+PUT & 1 & 2 & success & \\
+PUT & 1.5 & 2.5 & failure & no floating point support\\
+PUT & "hello" & "earth" & failure & key already exists \\
+PUT & (very long string) & "value" & failure & 256-byte limit for now \\
+PUT & (very long int) & "value" & failure & 256-byte limit for now \\
+PUT & (empty) & "string" & failure & both key and value must be set \\
+PUT & "\begin{CJK*}{UTF8}{bsmi}你\end{CJK*}" & "\begin{CJK*}{UTF8}{bsmi}好\end{CJK*}" & failure & ASCII support only \\
+PULL & "hello" & & "world" & \\
+PULL & 42 & & "life" & \\
+PULL & "abc" & & 123 & \\
+PULL & "HELLO" & & failure & case sensitive \\
+PULL & (very long string) & & failure & 256-byte limit for now \\
+PULL & "a new key" & & failure & key does not exist \\
+\end{tabular}
+\caption{Examples of Key-value store test cases}
+\label{table:tests}
+\end{table}
+
+Realtime debugging on the SpiNNaker board is relatively hard, but luckly the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug} (\textit{https://github.com/SpiNNakerManchester/ybug}), also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality.\cite{ybug} On the \textit{host} Python code, debugging was done using the Pycharm IDE runtime tools.
 
 \begin{figure}
   \centering
-  \includegraphics[width=1.3\linewidth, natwidth=1366, natheight=768]{images/debugging.png}
+  \includegraphics[width=1.15\linewidth, natwidth=1366, natheight=768]{images/debugging.png}
   \captionof{figure}{Debugging}
   \label{fig:debugging}
   \centering
-  \includegraphics[width=1.3\linewidth, natwidth=1366, natheight=768]{images/testing.png}
+  \includegraphics[width=1.15\linewidth, natwidth=1366, natheight=768]{images/testing.png}
   \captionof{figure}{Testing}
   \label{fig:testing}
 \end{figure}
-
-
 
 \subsection{Row-based vs Column-based}
 
@@ -335,7 +360,7 @@ pull "hello"
 
 We are not guaranteed that the \textit{pull} query will retrieve the value "world". As both queries are executed symultaneously on the SpiNNaker board, there is a chance that the \textit{pull} operation will terminate before the \textit{put} does, thus failing to return a value.
 
-As a solution to this dependency constraint, my SpiDB database API includes the syntax symbol "." (dot) which blocks execution until all preceeding operations terminate. This allows the programmer to control execution flow, choosing what is allowed to compute out-of-order (in parallel) and what should be sequentialised at a cost of performance. This is a similar concept to the Verilog blocking and non-blocking assignments.[?]
+As a solution to this dependency constraint, my SpiDB database API includes the syntax symbol "." (dot) which blocks execution until all preceeding operations terminate. This allows the programmer to control execution flow, choosing what is allowed to compute out-of-order (in parallel) and what should be sequentialised at a cost of performance. This is a similar concept to the Verilog blocking and non-blocking assignments.
 
 \begin{lstlisting}[caption={Blocking execution}, label=list:blocking1]
 put "hello" "world"
@@ -355,7 +380,7 @@ pull "life"
 pull 123
 \end{lstlisting}
 
-It is worth noting that although non-block operations can cause out-of-order execution, it does not occur very frequently. This is because, when transmitting data to the board, queries are serialised over ethernet in order of appearence and in addition there is a small forced transmission delay between these packets. This will be further discussed on chapter 3 \ref{cha:eval}.
+It is worth noting that although non-block operations can cause out-of-order execution, it does not occur very frequently. This is because, when transmitting data to the board, queries are serialised over ethernet in order of appearence and in addition there is a small forced transmission delay between these packets. This will be further discussed on chapter \ref{cha:eval}.
 
 \subsection{Unreliable communication}
 blah blah blah
@@ -363,7 +388,7 @@ blah blah blah
 \subsection{API Bugs}
 I have been one of the few users of a large amount of the SpiNNaker API, currently under contruction. This means some of it has not been fully tested, resulting in strange behaviour at times, making debugging of my own application difficult. Besides aiming to gather benchmarks for SpiNNaker, my project itself has been very useful when exposing unexpected errors or inconsistencies in the team's codebase.
 
-Facing these issues was certainly a challenge, as they belonged to domains I had little knowledge of. I was a good opportunity for me to learn and improve code quality of a large, collaborated project, by testing its usability and evaluating its outputs. This means my project involved not only developing the database application itself, but also collaborating to improve SpiNNaker itself.
+Facing these issues was certainly a challenge, as they belonged to domains I had little knowledge of. I was a good opportunity for me to learn and improve code quality of a large, collaborated project, by testing its usability and evaluating its outputs. This means my project involved not only developing the database application, but also collaborating to improve SpiNNaker itself.
 
 The main API bugs I exposed and helped resolve were:
 
