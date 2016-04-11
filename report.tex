@@ -41,16 +41,11 @@
     belowskip=2em,
 }
 
-%% The best way to latex just one chapter is to uncomment lines such as
-%% the next:
-%\includeonly{chapter1}
-
 \title{SpiDB\\Databases on SpiNNaker}
 \author{Arthur Ceccotti}
 \supervisor{Dr. David Lester}
 \reportyear{2016}
 
-%% abstract. this is manditory!
 \abstractfile{abstract.tex}
 
 \thanksfile{merci.tex}
@@ -68,39 +63,23 @@
 %\cfoot{\thepage}
 %\rfoot{}
 
-%% The following line sets up the use of PostScript fonts rather
-%% than the standard bitmapped fonts.
-\usepackage{pslatex}
-
-%% Uncomment the following line if you want to change the name of the
-%% Bibliography to References
-%\renewcommand{\bibname}{References}
-
-\usepackage{listings}
-
-%% End of preamble, the actual document starts here
-
 \begin{document}
 
-%% This actually creates the title and abstract pages
 \dotitleandabstract
 
-%% Generate contents etc
 \tableofcontents
 \listoffigures
 \listoftables
 
-%% These include the actual text
 \include{chapter1}
 \include{chapter2}
 \include{chapter3}
 \include{chapter4}
 
-\bibliography{refs.bib}         % this causes the references to be
-                                % listed
+\bibliography{refs.bib}
+
 
 \bibliographystyle{ieeetr}
-%% Appendices start here
 \appendix
 \include{appendix1}
 \end{document}

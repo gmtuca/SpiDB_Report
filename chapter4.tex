@@ -46,20 +46,27 @@ As can be seen on figure \ref{fig:transmission-delay}, large packet transmission
 \label{fig:transmission-delay}
 \end{figure}
 
-what are reasons for packets to drop? because thingy just takes 1 microsecond or does it?...
+%what are reasons for packets to drop? because thingy just takes 1 microsecond or does it?...
 
 \section{Performance benchmark}
 
+\iffalse
 In order to evaluate the performance of my database management system, I compared it with two of the most popular RAM-based Key-value pair databases: \textbf{memcached} and \textbf{Redis}.
 
-Figure \ref{fig:write-perf-benchmark} shows that the SpiNNaker Database (SpiDB) performs quite poorly against the two competitors, running at about 7,000-8,000 operations per second, which is slower than the others by a factor of 8. Performance was mostly constant given input size, up to the maximum SDP data size of 256-bytes.
+Figure \ref{fig:write-perf-benchmark} shows a plot of the performance of the SpiNNaker Database (SpiDB) against these competitors for 100,000 consecutive \textit{put} operations. It can be seen that SpiDB runs at about 7,000-8,000 operations per second, which is slower than the others by a factor of 8. Performance for all systems was mostly constant given input size, up to the maximum \textit{SDP} data size of 256-bytes. The specifications can be found at appendix under section \ref{sec:appendix-specs}.
 
 how to improve this? spinnlink
 
+scalability:
+THIS TAKES 1microsecond using the watchdog timer.
+
+response times. why are they so high sometimes?!?!
+first explain how we gather the time (operating system could be interrupting, sark, etc.)
+This would ideally allow a linear speedup of data retrival in comparison with a sequential system.
 
 100,000
 
-The \textbf{memcached} and \textbf{Redis} benchmarks were run on an ASUS X555L quadcore Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 8gb DDR3 RAM @ 1600 MHz. SpiNN-3
+
 
 \begin{figure}
 \begin{center}
@@ -68,22 +75,34 @@ The \textbf{memcached} and \textbf{Redis} benchmarks were run on an ASUS X555L q
 \caption{PUT operation performance benchmark}
 \label{fig:write-perf-benchmark}
 \end{figure}
+\fi
 
-\section{Hash vs Naive}
 
-\section{Sequential vs Parallel}
+(still needs writting)
+
+%\section{Hash vs Naive}
+
+%\section{Sequential vs Parallel}
 
 \section{Limitations}
--SDRAM bandwidth
--single point of failure for each board(mention that it is already like that. no way to avoid).
--no global timer (gathering performance info...)
 
-\section{Predictions}
-THIS TAKES 1microsecond using the watchdog timer.
+(still needs writting)
 
-response times. why are they so high sometimes?!?!
-first explain how we gather the time (operating system could be interrupting, sark, etc.)
-This would ideally allow a linear speedup of data retrival in comparison with a sequential system.
+%-SDRAM bandwidth
+%-single point of failure for each board(mention that it is already like that. no way to avoid).
+%-no global timer (gathering performance info...)
+
+\iffalse
+
+\begin{figure}
+\begin{center}
+	\includegraphics[width=1.2\textwidth, natwidth=820, natheight=329]{images/sdram_bandwidth.png}
+\end{center}
+\caption{SDRAM bandwidth utilization}
+\label{fig:write-perf-benchmark}
+\end{figure}
+
+\fi
 
 \section{Future work}
 This project has been the tip of the iceberg of what a fully-functional SpiNNaker database management system can be, involving mostly research and simple operations to evaluate its performance. All code written by me is now part of the official open-source SpiNNaker API, available to the team and any developers interested. This means SpiDB is likely to expand in the future or serve as an example application running on SpiNNaker, accessible to researchers around the globe.

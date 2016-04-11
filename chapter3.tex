@@ -345,9 +345,6 @@ Realtime debugging on the SpiNNaker board is relatively hard, but luckly the API
 \section{Challenges}
 This section outlines a list of different challenges and problems I had to face during the development of the application and how they influenced decision making.
 
-\subsection{Scalability}
-...tree structure...
-no acknowledgements
 
 \subsection{Out-of-order execution}
 \label{sec:out-of-order}
@@ -405,11 +402,9 @@ The main API bugs I exposed and helped resolve were:
 
 \begin{itemize}
 \item \textbf{Duplicate packets}: when multiple distinct SDP packets were sent from different sources to the same destination, strangely the receiving core would read the same packet duplicated a number of times. This behaviour was highly unexpected to the team, so upon extensive testing, I was able to point the issue to a running processor named \textit{reinjector}, in charge of re-issuing lost packets, and resolve the problem. 
-
 \item \textbf{Data Specification Error}: when uploading binaries to the board, sometimes cores would crash with an internal error state (SWERR), upon evaluating and providing the team with detailed feedback on the issue, I found this to be caused by the SpiNNaker Data Specification framework, which handles allocation of data in shared RAM.
 
-\item algorithms
-
+% \item algorithms
 \end{itemize}
 
 
