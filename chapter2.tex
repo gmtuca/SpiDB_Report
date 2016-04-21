@@ -25,20 +25,20 @@ The SpiNNaker chip contains two silicon dies: the SpiNNaker die itself and a 128
 
 Each ARM core within the chip follows a 32-bit Harvard Architecture, holding a private 32-KB instruction tightly coupled memory (ITCM) and 64-KB data tightly coupled memory (DTCM).\cite{painkras} It has a small peak power consumption of 1-W at the nominal clock frequency of 180-MHz.\cite{arm968}
 
-There are currently two types of SpiNNaker boards: \textbf{SpiNN-3} (figure \ref{fig:4node}), composed of 4 chips, thus a total of 72 processing cores, and \textbf{SpiNN-4} (figure \ref{fig:48node}), composed of 48 chips for a total of 864 processing cores.
+Figure \ref{fig:4node} shows SpiNN-4, a 4 chip SpiNNaker board with 72 processors, next to figure \ref{fig:48node} (SpiNN-5), composed of 48 chips for a total of 864 processing cores.
 
 \begin{figure}
 \centering
 \begin{minipage}{.5\textwidth}
   \centering
   \includegraphics[width=0.4\linewidth, natwidth=245, natheight=205]{images/4node.jpg}
-  \captionof{figure}{SpiNN-3}
+  \captionof{figure}{SpiNN-4}
   \label{fig:4node}
 \end{minipage}%
 \begin{minipage}{.5\textwidth}
   \centering
   \includegraphics[width=0.9\linewidth, natwidth=945, natheight=896]{images/48node.jpg}
-  \captionof{figure}{SpiNN-4}
+  \captionof{figure}{SpiNN-5}
   \label{fig:48node}
 \end{minipage}
 \end{figure}
@@ -56,11 +56,14 @@ There are currently 4 different communication protocols in the system. It is wor
 \item \textbf{Point to Point (P2P)}: \textit{P2P} packets have a single source and a single destination core (one-to-one). Each packet contains a 16-bit source ID, destinarion ID and an optional 32-bit payload.\cite{datasheet}
 On top of this layer, the SpiNNaker Datagram Protocol (\textit{SDP}) was designed to allow transfers of up to 256-bytes of data between two cores, by sending a sequence of \textit{P2P} packets with payloads.\cite{sdp} \textit{SDP} can be used to communicate to the \textit{host} machine, wrapped around a larger \textit{UDP} packet.
 
-\item \textbf{Nearest-neighbour (NN)}: Under the \textit{NN} protocol, packets issued at a chip are delivered to the Monitor Processors of each of its 6 neighbours (one-to-many) according to the board's connections. \textit{NN} packets contain a 32-bit payload and a 32-bit address/operation field.\cite{datasheet}
+\item \textbf{Nearest-neighbour (NN)}: Under the \textit{NN} protocol, packets issued at a chip are delivered to the Monitor Processors of each of its 6 neighbours (one-to-many) according to the system's connections. \textit{NN} packets contain a 32-bit payload and a 32-bit address/operation field.\cite{datasheet}
 
 \item \textbf{Fixed-route (FR)}: \textit{FR} packets use the same mechanism as \textit{MC}, without a key field. Packets being routed by the contents of a register instead of a routing key. 
 \end{itemize}
 
 My database application makes extensive use of the \textit{SDP} protocol, alongside \textit{MC}.
+
+%software 
+%EVENT DRIVEN C --- interrupts
 
 

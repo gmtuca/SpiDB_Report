@@ -1,6 +1,5 @@
 \documentclass[12pt]{third-rep}
 \setcounter{secnumdepth}{3}
-%\documentclass[UTF8]{ctexart}
 \usepackage{CJKutf8}
 
 \renewcommand{\figurename}{Fig.}
@@ -13,8 +12,8 @@
 \def\BState{\State\hskip-\ALG@thistlm}
 \makeatother
 
-\usepackage{url} % typeset URL's sensibly
-\usepackage{pslatex} % Use Postscript fonts
+\usepackage{url}
+\usepackage{pslatex}
 \usepackage{caption}
 \usepackage{subcaption}
 
@@ -41,31 +40,13 @@
     belowskip=2em,
 }
 
-\title{SpiDB\\Databases on SpiNNaker}
-\author{Arthur Ceccotti}
-\supervisor{Dr. David Lester}
-\reportyear{2016}
-
-\abstractfile{abstract.tex}
-
-\thanksfile{merci.tex}
-
-%% Uncomment the following lines if you want to include the date as a
-%% header in draft versions. See the documentation for fancyhdr for
-%% more ways of modifying headers (texdoc fancyhdr will show you the
-%% docs) 
-
-%\usepackage{fancyhdr}
-%\pagestyle{fancy}
-%\lhead{}  % left head
-%\chead{Draft: \today} % centre head
-%\lfoot{}
-%\cfoot{\thepage}
-%\rfoot{}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 
 \begin{document}
 
-\dotitleandabstract
+\include{frontpage}
+\include{abstract}
+\include{merci}
 
 \tableofcontents
 \listoffigures
@@ -77,7 +58,6 @@
 \include{chapter4}
 
 \bibliography{refs.bib}
-
 
 \bibliographystyle{ieeetr}
 \appendix

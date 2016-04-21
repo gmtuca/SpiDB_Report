@@ -3,12 +3,12 @@
 This chapter describes the development of my database application, SpiDB, from September 2015 to March 2016, involving planning, testing and implemention. The project is open-source, which can be found at
 \textit{https://github.com/SpiNNakerManchester/SpiNNakerGraphFrontEnd}.
 
-By being part of the SpiNNaker team in Manchester, I was directly exposed to the ongoing research, frequently receiving feedback on my work. The collaboration was effectively bi-directional, as I was able to constantly find, evaluate and fix inconsistencies and bugs in the API not known to the team.
+By being part of the SpiNNaker team in Manchester, I was directly exposed to the ongoing research, frequently receiving feedback on my work. The collaboration was effectively bi-directional, as I was able to constantly find, evaluate and fix inconsistencies and bugs in the Software API not known to the team.
 
 \section{Planning}
-The first step of my project involved making a detailed plan of approach, taking into consideration the time resources and learning curve. Such plan was useful to set myself deadlines for deliverables in the cycle of short iterations and keep track of progress. A high level chart with the weekly delivery plan can be seen on figure \ref{fig:plan}.
+The first phase of my project involved making a detailed plan of approach, taking into consideration the time resources and learning curve. Such a plan was useful to set myself deadlines for deliverables in the cycle of short iterations and keep track of progress. A high level chart with the weekly delivery plan can be seen on figure \ref{fig:plan}.
 
-The overall project was divided into two halves: developing a No-SQL Key-value store for insertion and retrival of non-structured data and an SQL based Relational Database for creation and manipulation of table structures. 
+The overall project was divided into two phases: developing a No-SQL Key-value store for insertion and retrival of non-structured data and an SQL based Relational Database for creation and manipulation of table structures. 
 
 \begin{figure}
 \center
@@ -18,13 +18,13 @@ The overall project was divided into two halves: developing a No-SQL Key-value s
 \end{figure}
 
 \subsection{Requirements Analysis}
-The project plan involved analysing the importance of different requirements based on their relative difficulty and scope within the project aim. Modern database management systems have a broad range of complex requirements. Given the limited resources, I have selected 4 important concepts which must have strict focus on the SpiDB system:
+The project plan involved analysing the importance of different requirements based on their relative difficulty and scope within the project aim. Modern database management systems have a broad range of complex requirements. Given limited resources, the following requirements were prioratized for this application:
 
 \begin{itemize}
-	\item \textbf{Reliability}: user's queries must complete in a reasonable way. This means any internal errors, inconsistencies or communication failures should be handled from within the database system, avoiding unpredicted failures to the user. This is a difficult task given the unreliability of the SpiNNaker communication fabric, earlier discussed on section \ref{sec:comm_fabric}.
-	\item \textbf{Durability}: user's queries with the aim of modifying the database state should persist, being internally stored until removal. The SpiNNaker hardware does not contain permanent storage components, reducing this contraint to "insert operations must persist until shutdown". It would be possible to externally connect the board to a mass-storage device, but it is outside of the scope of this project.
-	\item \textbf{Isolation}: executing transactions concurrently must have the same effect as doing so sequentially. Concurrency control is an important part of this parallel database system, as it aims to handle thousands of concurrent queries distributed among thousands of processing cores. An approach to ensure isolation in the system is further discussed in section \ref{sec:out-of-order}.
-	\item \textbf{Scalability}: the system must be able to handle a large number of parallel queries and have enhanced performance when given more hardware resources, in this case processor count.	This is arguably the most important of all requirements, as the SpiNNaker team is currently focusing on building a large scale machine composed of 1,000,000 processing cores. If this application scales well, it will quickly be able to show the strengths and weaknesses of the machine.
+	\item \textbf{Reliability}: User's queries must complete in a reasonable way. This means any internal errors, inconsistencies or communication failures should be handled from within the database system, avoiding unpredicted failures to the user. This is a difficult task given the unreliability of the SpiNNaker communication fabric, as discussed in section \ref{sec:comm_fabric}.
+	\item \textbf{Durability}: User's queries with the aim of modifying the database state should persist, being internally stored until removal. The SpiNNaker hardware does not contain permanent storage components, reducing this contraint to "insert operations must persist until shutdown". It would be possible to externally connect the board to a mass-storage device, but it is outside of the scope of this project.
+	\item \textbf{Isolation}: Executing transactions concurrently must have the same effect as doing so sequentially. Concurrency control is an important part of this parallel database system, as it aims to handle thousands of concurrent queries distributed among thousands of processing cores. An approach to ensure isolation in the system is further discussed in section \ref{sec:out-of-order}.
+	\item \textbf{Scalability}: The system must be able to handle a large number of parallel queries and have enhanced performance when given more hardware resources, in this case processor count.	This is arguably the most important of all requirements, as the SpiNNaker team is currently focusing on building a large scale machine composed of 1,000,000 processing cores. If this application scales well, it will quickly be able to show the strengths and weaknesses of the machine.
 \end{itemize}
 
 These main requirements do not cover two of the four ACID (Atomicity, Consistency, Durability, Isolation) properties of a database: atomicity and consistency. Atomicity, althogh very important on a large commercial application, is extremely hard to achieve in a descentralized system, with the use of complex multi-core rollbacks, and falls out of the scope of this experimental project. Consistency is significant when ensuring data written to the database is valid according to constraints, triggers and cascades, which are originally non-existent in a reduced instruction data store and do not contribute to the project research.
@@ -32,9 +32,9 @@ These main requirements do not cover two of the four ACID (Atomicity, Consistenc
 Lastly another outstanding requirement not included in the plan was a strong security protocol. Data encryption and authorization have many advantages, but present themselves as unecessary complexity for a small, private, experimental project.
 
 \subsection{Technologies}
-Part of the project plan involves research on the SpiNNaker hardware and API, extensively used on my project. Given the steep learning curve of a low level distributed system, on the 7\textsuperscript{th} of September 2015, I attended the \textit{5\textsuperscript{th} SpiNNaker Workshop}, where tens of researchers from around the globe gathered for a one week course on the SpiNNaker Project in Manchester. I was officially introduced to the team, whom I would learn from and work with for the rest of the year.
+Part of the project plan involves research on the SpiNNaker hardware and software stack, extensively used on my project. Given the steep learning curve of a low level distributed system and event driven platform, on the 7\textsuperscript{th} of September 2015, I attended the \textit{5\textsuperscript{th} SpiNNaker Workshop}, where tens of researchers from around the globe gathered for a one week course on the SpiNNaker Project in Manchester. I was officially introduced to the team, whom I would learn from and work with for the rest of the year.
 
-The SpiNNaker API is split two: the Python toolchain, running on the \textit{host} machine (user's computer), and C code, compiled to run on the board. The full API can be found at \textit{https://github.com/SpiNNakerManchester}. A strong knowledge of ARM assembly was also needed, given the low level architecture.
+The SpiNNaker Software Stack is split into two: the Python toolchain, running on the \textit{host} machine (user's computer), and C code, compiled to run on the board. The full software and documentation can be found at \textit{https://github.com/SpiNNakerManchester}, and is composed of over 70,000 lines of code, a lot of which I had to carefully read and learn to use.
 
 These technologies were used to develop the following deliverables:
 \begin{itemize}
@@ -43,10 +43,18 @@ These technologies were used to develop the following deliverables:
 \end{itemize}
 
 \section{Design}
-Internally, I designed SpiDB to have a hierarchical tree structure architecture, composed of \textit{root}, \textit{branch} and \textit{leaf} nodes/cores. This structure allows a divide-and-conquer approach to the database query plan. When queries are issued by the \textit{host} machine, they are received at the \textit{root} core.
+Internally, I designed SpiDB to have a hierarchical tree structure architecture, composed of \textit{root}, \textit{branch} and \textit{leaf} nodes/cores. This structure allows a divide-and-conquer approach to the database query plan, having the aim of improving load balancing, scalability and allow aggregation of data entries.
 
-Each chip contains a single \textit{root} node, which handles incomming packets from \textit{host} by redirecting them to \textit{branch} and \textit{leaf} nodes, in an intelligent way, for parallel processing. The middle layer is composed of 4 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core. Finally the chip is composed of 12 \textit{leaf} nodes, with the aim of actually storing and retrieving database entries (key-value pairs or table rows) on shared memory. These roles can be visualised on figures \ref{fig:tree} and \ref{fig:tree-chip}. The 2 remaining cores are used for internal use of the system (\textit{sark} and \textit{reinjector}), omitted from these figures.
-
+The following binaries run on different cores on the chip, each with a specific role:
+\begin{itemize}
+	\item \textbf{root}: Each chip contains a single \textit{root} node, which handles incomming packets from \textit{host} by redirecting them to \textit{branch} and \textit{leaf} nodes, in an intelligent way, for parallel processing. Thus it reads user queries and manages load balancing throughout the board.
+	\item \textbf{branch}: The middle layer is composed of 4 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core.
+	\item \textbf{leaf}: The user queries are finally processed by 12 \textit{leaf} nodes per chip, with the aim of storing and retrieving database entries (key-value pairs or table rows) on shared memory, unlike other nodes which handle mostly communications.
+\end{itemize}
+	These roles can be visualised on figures \ref{fig:tree} and \ref{fig:tree-chip}.
+	
+	The two remaining cores on the SpiNNaker chip are used for internal use of the system (thus omitted from the diagrams), as they run an instance of \textit{sark}, low level SpiNNaker Operating System, and \textit{reinjector}, in charge of re-issuing dropped Multicast packets.
+ 
 \begin{figure}
 \centering
 \begin{minipage}{1\textwidth}
@@ -69,13 +77,14 @@ A disadvantage of this design is that less cores perform the actual storage and 
 
 \section{Implementation}
 \label{sec:implementation}
+This section describes the final implementation achieved during the development of the project. It outlines the supported database operations, their internal functionality, expected results and performance.
 
 \subsection{Key-value Store}
 The first half of the project involved developing a distributed key-value store, in which users can insert and retrieve data entries in a dictionary form. This means the user must be able to set keys mapping to values, both of type \textit{int} or \textit{string}, and retrieve such values when given the same keys. This section describes in detail the internal processing of the insert (\textit{put}) and retrieve (\textit{pull}) queries. 
 
 \subsubsection{PUT}
 The \textit{put} operation is the main way of inserting data onto the SpiDB distributed database. 
-Upon completion, such operation will store the specified key, mapping to its value, on the memory of an arbitrary chip in the Spinnaker board (as chosen by the \textit{root} core). This operation expects an acknowledgement from the core which stored the entry.
+Upon completion, such operation will store the specified key, mapping to its value, on the memory of an arbitrary chip in the Spinnaker board (as chosen by the \textit{root} core). This operation expects an acknowledgement from the core which stored the entry. It has complexity linear to the size of the input key-value and constant to database size.
 
 Example usage:
 \begin{lstlisting}
@@ -97,13 +106,11 @@ In this case \textit{SpiDBCommands} is set to the constant representing the put 
 	\item \textbf{Naive}: as packets arrive, they are assigned to a different \textit{leaf} node in a Round-Robin manner.
 	\item \textbf{Hashing}: the given key is used to produce a 32-bit hash value, which is decoded to assign the query to a specific \textit{leaf} node.
 \end{itemize}
-\item \textit{root} communicates to chosen \textit{leaf} node with \textit{put} contents via SDP (figure \ref{fig:root-leaf}).
+\item \textit{root} communicates to chosen \textit{leaf} node with \textit{put} contents via \textit{SDP} (figure \ref{fig:root-leaf}).
 \item \textit{leaf} node triggers an interrupt and stores key-value entry into its dedicated region of SDRAM.
 \item \textit{leaf} sends an acknowledgement message over UDP back to host (figure \ref{fig:leaf-host}).
 \item User receives timing information and query result.
 \end{enumerate}
-
-Complexity: linear to the size of the input key-value, constant to database size.
 
 \begin{figure}
 \centering
@@ -112,7 +119,7 @@ Complexity: linear to the size of the input key-value, constant to database size
   \includegraphics[width=1\linewidth, natwidth=794, natheight=1123]{images/put1.png}
   \captionof{figure}{Host to root packet}
   \label{fig:host-root}
-\end{minipage}%
+\end{minipage}
 \begin{minipage}{.32\textwidth}
   \centering
   \includegraphics[width=1\linewidth, natwidth=794, natheight=1123]{images/put2.png}
@@ -127,10 +134,9 @@ Complexity: linear to the size of the input key-value, constant to database size
 \end{minipage}
 \end{figure}
 
-
 \subsubsection{PULL}
 The \textit{pull} operation is the main way of retrieving data from the SpiDB distributed database. 
-Upon completion, such operation will return the value mapped by a given key, from an arbitrary chip in the SpiNNaker board, or not respond if such key was not found. This operation expects a response only if the key is present on the database, thus it is an undecidable problem. The reason for this is further explained in section \ref{sec:unreliable_comm}.
+Upon completion, such operation will return the value mapped by a given key, from an arbitrary chip in the SpiNNaker board, or not respond if such key was not found. This operation expects a response only if the key is present on the database, thus it is an undecidable problem. The reason for this is further explained in section \ref{sec:unreliable_comm}. This operation has complexity linear to the size of the input and linear to database size, although highly improved with a large number of processors.
 
 Example usage:
 \begin{lstlisting}
@@ -153,8 +159,6 @@ Where \textit{SpiDBCommands} represents the pull operation constant, \textit{id}
 \item Each \textit{leaf} node that received a search request triggers an interrupt and searches for key-value mapping in SDRAM memory. If key is found, value is returned over UDP back to host.
 \item User receives timing information and query result.
 \end{enumerate}
-
-Complexity: linear to the size of the input, linear to database size.
 
 Algorithms \ref{alg:root} and \ref{alg:leaf} show a high level simplification of code running in the \textit{root} and \textit{leaf} nodes, as described above, through the event driven application, implementing \textit{put} and \textit{pull} operations.
 
@@ -220,7 +224,7 @@ Algorithms \ref{alg:root} and \ref{alg:leaf} show a high level simplification of
 The second half of the project involves developing an SQL-based distributed database on top of the key-value store layer. Entries are stored in a structured way, bounded by the definition of tables. In this RDMS users can create tables with different fields, insert values and retrieve them with given conditions. This section describes in detail the internal processing of the \textit{create}, \textit{insert} and \textit{select} queries. 
 
 \subsubsection{CREATE}
-In SpiDB, the \textit{create} operation is used to generate a table definition in the SpiNNaker hardware. Data can only be inserted into the database if a corresponding table exists. This query has as parameters the table name, field names and their types (\textit{int} or \textit{string}). Multiple distinct tables can be issued symultaneously, although they are handled by a single core. 
+In SpiDB, the \textit{create} operation is used to generate a table definition in the SpiNNaker hardware. Data can only be inserted into the database if a corresponding table exists. This query has as parameters the table name, field names and their types (\textit{int} or \textit{string}).
 This operation expects an acknowledgement from the \textit{root} core, which sets the failure flag if the table definition already exists.
 
 Example usage:
@@ -344,7 +348,6 @@ Realtime debugging on the SpiNNaker board is relatively hard, but luckly the API
 
 \section{Challenges}
 This section outlines a list of different challenges and problems I had to face during the development of the application and how they influenced decision making.
-
 
 \subsection{Out-of-order execution}
 \label{sec:out-of-order}
