@@ -51,12 +51,12 @@ Cores on a SpiNNaker board exchange packets through wired connections over a lar
 There are currently 4 different communication protocols in the system. It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsen if there is increased traffic in the communication fabric. Sending a large amount of packets symultaneously is likely to result on packet drops.
 
 \begin{itemize}
-\item \textbf{Multicast (MC)}: The \textit{MC} protocol, originally designed to simulate neural spikes, is used when a sigle source issues information to multiple destinations (one-to-many). The packet contains a 32 bit routing key, used by an external router process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
+\item \textbf{Multicast (MC)}: The \textit{MC} protocol, originally designed to simulate neural spikes, is used when a sigle source issues information to multiple destinations (one-to-many), as a fan-out topology.\cite{overviewspinn} The packet contains a 32 bit routing key, used by an external router process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
 
 \item \textbf{Point to Point (P2P)}: \textit{P2P} packets have a single source and a single destination core (one-to-one). Each packet contains a 16-bit source ID, destinarion ID and an optional 32-bit payload.\cite{datasheet}
 On top of this layer, the SpiNNaker Datagram Protocol (\textit{SDP}) was designed to allow transfers of up to 256-bytes of data between two cores, by sending a sequence of \textit{P2P} packets with payloads.\cite{sdp} \textit{SDP} can be used to communicate to the \textit{host} machine, wrapped around a larger \textit{UDP} packet.
 
-\item \textbf{Nearest-neighbour (NN)}: Under the \textit{NN} protocol, packets issued at a chip are delivered to the Monitor Processors of each of its 6 neighbours (one-to-many) according to the system's connections. \textit{NN} packets contain a 32-bit payload and a 32-bit address/operation field.\cite{datasheet}
+\item \textbf{Nearest-neighbour (NN)}: Under the \textit{NN} protocol, packets issued at a chip will only be delivered to the monitor core on a physically adjacent node.\cite{overviewspinn} \textit{NN} packets contain a 32-bit payload and a 32-bit address/operation field.\cite{datasheet}
 
 \item \textbf{Fixed-route (FR)}: \textit{FR} packets use the same mechanism as \textit{MC}, without a key field. Packets being routed by the contents of a register instead of a routing key. 
 \end{itemize}

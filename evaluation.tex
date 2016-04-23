@@ -2,7 +2,7 @@
 \label{cha:eval}
 This research project has among its main aims the evaluation of results, described in this chapter. It is important to analyse how this general purpose application performs under the SpiNNaker environments and what architectural limitations it faces, which is useful feedback to the team. The chapter outlines also performance benchmarks of SpiDB in comparison with other database systems and how it can be improved.
 
-\section{Transmission delay}
+\section{Transmission delay \& Latency}
 \label{sec:eval_comm_rel}
 
 According to my experiments, sending SDP packets immediately between two cores results on a very large packet drop ration. Without explicit delay between the transmission of packets, the number of successful deliveries is only about 10\% of those sent for a large number of packets. This effect is strongly reduced by the addition of a small delay of 5-10$\mu$s, which guarantees over 99\% successful deliveries, as can be seen on table \ref{table:sdp_deliveries}. The table also shows that having long delays, greater than 10$\mu$s is mostly redundant, as they do not decrease packet loss significantly, but tragically reduce throughput.
@@ -37,8 +37,10 @@ High priority should be assigned to storing incomming packets into a buffer and 
 \caption{PUT performance with variable delay}
 \label{fig:transmission-delay}
 \end{figure}
+	
+A measured test, transmitting data from a host machine to an Ethernet attached SpiNNaker chip and then to an Application Processor on that node via shared memory, achieved speeds in excess of 22 Mb/s.\cite{scalablecomm}
 
-This evaluation is important because it allows finding the optimal transmission delay for an application. A developer on SpiNNaker using the point-to-point protocol needs to find the balance between transmission rate and reliability, which are inversely proportional. This balance is application dependent.
+This evaluation is important because it allows finding the optimal transmission delay and latency for an application. A developer on SpiNNaker using the SDP protocol, which is experimental and yet to be optimised\cite{scalablecomm}, needs to find the balance between transmission rate and reliability, which are inversely proportional.
 
 On SpiDB, I experimented with different time delays when transmitting packets from host over ethernet to a core on SpiNNaker, in order to find the best evaluation. The speed of one operation is calculated as the time of successful reply minus the time that operation was sent from host, thus being a round-trip-time plus internal processing time. The performance is calculated as the amount of operations successfully executed in one second.
 
@@ -52,6 +54,20 @@ These SpiDB experiments were performed with 100,000 \textit{put} operations with
 \end{center}
 \caption{HASH PULL performance with variable delay}
 \label{fig:hash-performance}
+\end{figure}
+
+These results are largely influenced by the latency of the SDP datagram, driving the need of such delays. A simulation framework described by Navaridas et al. \cite{impacttraffic} has shown how latency scales with system size by simulating a range of system configurations from 16 × 16 (256 nodes) to 256 × 256 (65,536 nodes). The average and maximum latencies obtained after a simulation of 100,000 cycles are plotted in figure \ref{fig:latency} \cite{scalablecomm}. End-to-end latency scales linearly with the number of nodes per dimension, i.e. $O(\sqrt{N})$ with the number of nodes. The 
+maximum latency is that needed to reach the most distant nodes. This means when designing a SpiNNaker application, a developer needs to take into account the locality of communications and the expected latency, which can be used to improve speed of packet transmission.
+
+\begin{figure}
+\begin{center}
+	\includegraphics[width=.7\textwidth, natwidth=336, natheight=243]{images/latency.png}
+\end{center}
+\caption{Latency scalability under uniform and local traffic distributions}
+\medskip
+\footnotesize
+Local distribution emulates close proximity destinations. Traffic following a uniform distribution represents a very pessimistic scenario in which locality is not exploited.
+\label{fig:latency}
 \end{figure}
 
 %\includegraphics[width=1\textwidth, natwidth=1063, natheight=509]{images/naive_performance.png}
@@ -77,21 +93,10 @@ Although from an initial evaluation it may seem that SpiNNaker is not capable of
 
 This scalability work has not yet been fully tested, thus it may serve as constructive speculation for now. It should also be noted that realistically a perfectly linear performance increase with the increase of horsepower is not common, as other factors need to be taken into account, such as synchronization, fault tolerance, etc.
 
-%how to improve this? spinnlink
-
-%THIS TAKES 1microsecond using the watchdog timer.
-
 %response times. why are they so high sometimes?!?!
-%first explain how we gather the time (operating system could be interrupting, sark, etc.)
-%This would ideally allow a linear speedup of data retrival in comparison with a sequential system.
 
-%\section{Sequential vs Parallel}
-
-\section{Limitations}
+\section{SDRAM bandwidth utilisation}
 \label{sec:limitations}
-
-\subsection{SDRAM bandwidth utilisation}
-
 this figure shows the aggregate SDRAM bandwidth utilization of a number of cors on a single SpiNNaker CMP, increased progressively from 1 to 14. DMA access to memory.
 
 It is clear from the figure that the read channel saturates just over 600 MB/s and the write channel adds around 300 MB/s on top of that, for a total aggregate bandwidth of 900 MB/s. Because memory reads and writes share the same network DMA channel, an increase in the number of writes decreases the read bandwidth. DMA bandwidth, although saturated, is shared fairly among all cores. 
@@ -111,14 +116,8 @@ From this evaluation, looking at the progression of Core 6 in the figure
 	\includegraphics[width=1.3\textwidth, natwidth=820, natheight=329]{images/sdram_bandwidth.png}
 \end{center}
 \caption{SDRAM bandwidth utilization}
-\label{fig:write-perf-benchmark}
+\label{fig:sdram_bandwidth}
 \end{figure}
-
-%-SDRAM bandwidth
-%-single point of failure for each board(mention that it is already like that. no way to avoid).
-%-no global timer (gathering performance info...)
-
-
 
 \section{Future work}
 This project has been the tip of the iceberg of what a fully-functional SpiNNaker database management system can be, involving mostly research and simple operations to evaluate its performance. All code written by me is now part of the official open-source SpiNNaker API, available to the team and any developers interested. This means SpiDB is likely to expand in the future or serve as an example application running on SpiNNaker, accessible to researchers around the globe.
