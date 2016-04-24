@@ -2,10 +2,10 @@
 \label{cha:eval}
 This research project has among its main aims the evaluation of results, described in this chapter. It is important to analyse how this general purpose application performs under the SpiNNaker environments and what architectural limitations it faces, which is useful feedback to the team. The chapter outlines also performance benchmarks of SpiDB in comparison with other database systems and how it can be improved.
 
-\section{Transmission delay \& Latency}
+\section{Transmission rate \& Latency}
 \label{sec:eval_comm_rel}
 
-According to my experiments, sending SDP packets immediately between two cores results on a very large packet drop ration. Without explicit delay between the transmission of packets, the number of successful deliveries is only about 10\% of those sent for a large number of packets. This effect is strongly reduced by the addition of a small delay of 5-10$\mu$s, which guarantees over 99\% successful deliveries, as can be seen on table \ref{table:sdp_deliveries}. The table also shows that having long delays, greater than 10$\mu$s is mostly redundant, as they do not decrease packet loss significantly, but tragically reduce throughput.
+According to my experiments, sending SDP packets immediately between two cores results on a very large packet drop ration. Without explicit delay/wait between the transmission of packets, the number of successful deliveries is only about 10\% of those sent for a large number of packets. This effect is strongly reduced by the addition of a small delay of 5-10$\mu$s, which guarantees over 99\% successful deliveries, as can be seen on table \ref{table:sdp_deliveries}. The table also shows that long intervals, greater than 10$\mu$s, are mostly redundant, as they do not decrease packet loss significantly, but tragically reduce throughput.
 
 Upon experimenting, I found that sending a large amount of consecutive, immediate packets (at least 1,000,000) has a chance of consequently crashing the destination core or causing it to reach the erraneous watchdog state (WDOG), meaning it cannot respond to commands.
 
@@ -56,8 +56,7 @@ These SpiDB experiments were performed with 100,000 \textit{put} operations with
 \label{fig:hash-performance}
 \end{figure}
 
-These results are largely influenced by the latency of the SDP datagram, driving the need of such delays. A simulation framework described by Navaridas et al. \cite{impacttraffic} has shown how latency scales with system size by simulating a range of system configurations from 16 × 16 (256 nodes) to 256 × 256 (65,536 nodes). The average and maximum latencies obtained after a simulation of 100,000 cycles are plotted in figure \ref{fig:latency} \cite{scalablecomm}. End-to-end latency scales linearly with the number of nodes per dimension, i.e. $O(\sqrt{N})$ with the number of nodes. The 
-maximum latency is that needed to reach the most distant nodes. This means when designing a SpiNNaker application, a developer needs to take into account the locality of communications and the expected latency, which can be used to improve speed of packet transmission.
+These results are largely influenced by the latency of the SDP datagram, driving the need of such delays. A simulation framework described by Navaridas et al. \cite{impacttraffic} has shown how latency scales with system size by simulating a range of system configurations from 16 × 16 (256 nodes) to 256 × 256 (65,536 nodes) on SpiNNaker. The average and maximum latencies obtained after a simulation of 100,000 cycles are plotted in figure \ref{fig:latency} \cite{scalablecomm}. End-to-end latency scales linearly with the number of nodes, i.e. $O(N)$. The maximum latency is that needed to reach the most distant nodes. This means when designing a SpiNNaker application, a developer needs to take into account the locality of communications and the expected latency, which can be used to determine transmission rates.
 
 \begin{figure}
 \begin{center}
@@ -97,19 +96,7 @@ This scalability work has not yet been fully tested, thus it may serve as constr
 
 \section{SDRAM bandwidth utilisation}
 \label{sec:limitations}
-this figure shows the aggregate SDRAM bandwidth utilization of a number of cors on a single SpiNNaker CMP, increased progressively from 1 to 14. DMA access to memory.
-
-It is clear from the figure that the read channel saturates just over 600 MB/s and the write channel adds around 300 MB/s on top of that, for a total aggregate bandwidth of 900 MB/s. Because memory reads and writes share the same network DMA channel, an increase in the number of writes decreases the read bandwidth. DMA bandwidth, although saturated, is shared fairly among all cores. 
-
-The progression of Core 6 on the plot shows that if the DMA controller is free, a single core can read from shared memory at 300 MB/s, but if such memory is being constantly accessed other cores, each will only receive data at a rate of around 50 MB/s (6 times slower than doing so exclusively).
-
-From these results I can evaluate that, although SDRAM is useful to store and share large amounts of data, it suffers when being accessed frequently accessed by multiple cores, which is exactly the case of the SpiDB \textit{pull} or \textit{SELECT} queries.
-
-
-From this evaluation, looking at the progression of Core 6 in the figure
-
-\cite{painkras}
-
+As discussed in section \ref{sec:spinn_arch}, a single SpiNNaker chip contains 18 cores sharing 128-MB of dynamic memory (SDRAM), used to store/retrieve data and transfer certain packets between cores. An important stage of the design of a SpiNNaker application is managing the share of available resources, such as SDRAM, to maximise collective utilisation and performance.
 
 \begin{figure}
 \begin{center}
@@ -118,6 +105,12 @@ From this evaluation, looking at the progression of Core 6 in the figure
 \caption{SDRAM bandwidth utilization}
 \label{fig:sdram_bandwidth}
 \end{figure}
+
+In order to find an efficient way to collectively access SDRAM, its bandwidth has to be taken into account. Figure \ref{fig:sdram_bandwidth}, plotted by E. Painkras et al. \cite{painkras}, shows the aggregate SDRAM bandwidth utilization of a number of cores on a single SpiNNaker chip, increased progressively from 1 to 14. The plot outlines the DMA transfer rate for each core as they symultaneously access the shared resource. It is clear from the figure that the read channel saturates just over 600 MB/s and the write channel adds around 300 MB/s on top of that, for a total aggregate bandwidth of 900 MB/s. Because memory reads and writes share the same network channel, an increase in the number of writes decreases the read bandwidth. Memory bandwidth, although saturated, is distributed fairly among all cores. \cite{painkras}
+
+The progression of Core 6 on the plot shows that if the DMA controller is free, a single core can read from shared memory at 300 MB/s, but if such memory is being constantly accessed by other processors, each will only retreive data at a rate of around 50 MB/s (6 times slower than doing so exclusively). This evaluation is important because it shows the limitation of all cores frequently accessing shared memory symultaneously, which is exactly the case of the SpiDB \textit{pull} and \textit{SELECT} queries.
+
+It is worth noting that the core's private memory (DTCM), although 2000 times smaller than SDRAM (64-KB vs 128-MB), is 50 times faster to access and does not suffer from concurrent access limitations, which makes it a strong candidate for the implementation of a \textit{cache} memory. This has not been yet implemented, but with appropriate synchronization it would highly reduce SDRAM access and reduce response times. On SpiDB another enhancement to minimise unecessary SDRAM access is the use of a hash-table structure, in which the location of values inserted on the database is always known, avoiding a linear scan through the system.
 
 \section{Future work}
 This project has been the tip of the iceberg of what a fully-functional SpiNNaker database management system can be, involving mostly research and simple operations to evaluate its performance. All code written by me is now part of the official open-source SpiNNaker API, available to the team and any developers interested. This means SpiDB is likely to expand in the future or serve as an example application running on SpiNNaker, accessible to researchers around the globe.

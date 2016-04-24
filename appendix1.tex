@@ -1,44 +1,22 @@
-\chapter{Appendix}
+\chapter{Experiments}
+This chapter describes the machine specifications and code instances used to run the experiments and evaluations of this report.
 
-\section{Sectionnnn}
-
-
-\lstinputlisting[language=C, caption=Storing incomming packets into a queue, label={lst:sdp_packet_callback}]{code/sdp_packet_callback.c}
-
-
-\section{Experiments Specification}
+\section{Specification}
 \label{sec:appendix-specs}
+All experiments and instances of SpiDB reported on this dissertation were run on an ASUS X555L quadcore Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 8gb DDR3 RAM @ 1600 MHz, 64-bit Ubuntu 15.04 machine connected over ethernet to a 4-chip SpiNN-3 board, produced in September 2011.
 
-The \textbf{memcached} and \textbf{Redis} benchmarks were run on an ASUS X555L quadcore Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 8gb DDR3 RAM @ 1600 MHz. SpiNN-3
-
-\section{Queries}
-\label{sec:appendix-queries}
-
-\lstinputlisting[language=C]{code/table.c}
+The \textit{Memcached} and \textit{Redis} benchmarks were run under such specifications, as well as the transmission rate experiments.
 
 \section{Communication Reliability}
 \label{sec:appendix_comm_rel}
 
-This section contains code snippets to send SDP packets from single source to single destination with delays between them. These were used in the experiments described on chapter \ref{cha:eval}, section \ref{sec:eval_comm_rel}.
+\subsection{Sending \& receiving SDP packets}
 
-Transmitting packets with variable delay:
+This section contains code snippets to send SDP packets from single source to single destination with variable delays/waits between them. These were used in the experiments described on section \ref{sec:eval_comm_rel}, using core 2 and 1 of chip 0,0.
+
+C code to send SDP packets with variable delay to a single core:
 
 \begin{lstlisting}[caption={Source}]
-uint rcv = 0;
-
-void sdp_packet_callback(register uint mailbox, uint port) {
-    rcv++;
-    spin1_msg_free((sdp_msg_t*)mailbox);
-    return;
-}
-
-...
-
-spin1_callback_on(SDP_PACKET_RX,    sdp_packet_callback, 0);
-
-\end{lstlisting}
-
-\begin{lstlisting}[caption={Destination}]
 void send_sdp_packets(uint32_t number_of_packets, uint32_t delay, uint32_t chip, uint32_t core){
 	sdp_msg_t msg;
     msg.flags       = 0x87;
@@ -60,11 +38,39 @@ void send_sdp_packets(uint32_t number_of_packets, uint32_t delay, uint32_t chip,
 }
 \end{lstlisting}
 
-SpiDB performance with variable delay:
+C code to log how many SDP packets were successfully received at destination:
 
-\begin{table}
+\begin{lstlisting}[caption={Destination}]
+uint rcv = 0;
+
+void sdp_packet_callback(register uint mailbox, uint port) {
+    rcv++;
+    spin1_msg_free((sdp_msg_t*)mailbox);
+    return;
+}
+
+...
+
+spin1_callback_on(SDP_PACKET_RX,    sdp_packet_callback, 0);
+
+\end{lstlisting}
+
+
+\subsection{Storing packets}
+The following code snippet (listing \ref{lst:sdp_packet_callback}) describes an efficient way of storing incomming SDP packets, to reduce packet drop, and process them under a lower priority, as discussed in section \ref{sec:eval_comm_rel}.
+
+\lstinputlisting[language=C, caption=Storing incomming packets into a queue, label={lst:sdp_packet_callback}]{code/sdp_packet_callback.c}
+
+\clearpage
+\newpage
+
+\subsection{Plot data}
+The following table contains data from multiple runs of SpiDB instances with 100,000 \textit{put} operations under different transmission delays, used to produce figure \ref{fig:transmission-delay}.
+
+\vspace{5mm}
+
 \begin{tabular}{ r | r | r }
-\textbf{interval (µs)} & \textbf{packet drop (\%)} & \textbf{performance (ops/sec)}  \\
+\textbf{interval ($\mu$s)} & \textbf{packet drop (\%)} & \textbf{performance (ops/sec)}  \\
 100 & 0.076 	& 6175 \\
 90	& 0.670		& 6608 \\
 80	& 0.475		& 7042 \\
@@ -78,8 +84,9 @@ SpiDB performance with variable delay:
 7	& 33.965 	& 9778 \\
 4	& 98.432 	& 243 \\
 \end{tabular}
-\caption{SpiDB insertion performance with variable transmission delay}
-\label{table:performance_delay}
-\end{table}
 
+%\section{Queries}
+%\label{sec:appendix-queries}
+
+%\lstinputlisting[language=C]{code/table.c}
 
