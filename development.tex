@@ -1,6 +1,6 @@
 \chapter{Development}
 
-This chapter describes the development of my database application, SpiDB, from September 2015 to March 2016, involving planning, testing and implemention. The project is open-source, which can be found at
+This chapter describes the development of my database application, SpiDB, from September 2015 to March 2016, involving planning, testing and implementation. The project is open-source, which can be found at
 \textit{https://github.com/SpiNNakerManchester/SpiNNakerGraphFrontEnd}.
 
 By being part of the SpiNNaker team in Manchester, I was directly exposed to the ongoing research, frequently receiving feedback on my work. The collaboration was effectively bi-directional, as I was able to constantly find, evaluate and fix inconsistencies and bugs in the Software API not known to the team.
@@ -8,7 +8,7 @@ By being part of the SpiNNaker team in Manchester, I was directly exposed to the
 \section{Planning}
 The first phase of my project involved making a detailed plan of approach, taking into consideration the time resources and learning curve. Such a plan was useful to set myself deadlines for deliverables in the cycle of short iterations and keep track of progress. A high level chart with the weekly delivery plan can be seen on figure \ref{fig:plan}.
 
-The overall project was divided into two phases: developing a No-SQL Key-value store for insertion and retrival of non-structured data and an SQL based Relational Database for creation and manipulation of table structures. 
+The overall project was divided into two phases: developing a No-SQL Key-value store for insertion and retrieval of non-structured data and an SQL based Relational Database for creation and manipulation of table structures. 
 
 \begin{figure}
 \center
@@ -18,18 +18,18 @@ The overall project was divided into two phases: developing a No-SQL Key-value s
 \end{figure}
 
 \subsection{Requirements Analysis}
-The project plan involved analysing the importance of different requirements based on their relative difficulty and scope within the project aim. Modern database management systems have a broad range of complex requirements. Given limited resources, the following requirements were prioratized for this application:
+The project plan involved analysing the importance of different requirements based on their relative difficulty and scope within the project aim. Modern database management systems have a broad range of complex requirements. Given limited resources, the following requirements were prioritized for this application:
 
 \begin{itemize}
 	\item \textbf{Reliability}: User's queries must complete in a reasonable way. This means any internal errors, inconsistencies or communication failures should be handled from within the database system, avoiding unpredicted failures to the user. This is a difficult task given the unreliability of the SpiNNaker communication fabric, as discussed in section \ref{sec:comm_fabric}.
-	\item \textbf{Durability}: User's queries with the aim of modifying the database state should persist, being internally stored until removal. The SpiNNaker hardware does not contain permanent storage components, reducing this contraint to "insert operations must persist until shutdown". It would be possible to externally connect the board to a mass-storage device, but it is outside of the scope of this project.
+	\item \textbf{Durability}: User's queries with the aim of modifying the database state should persist, being internally stored until removal. The SpiNNaker hardware does not contain permanent storage components, reducing this constraint to "insert operations must persist until shutdown". It would be possible to externally connect the board to a mass-storage device, but it is outside of the scope of this project.
 	\item \textbf{Isolation}: Executing transactions concurrently must have the same effect as doing so sequentially. Concurrency control is an important part of this parallel database system, as it aims to handle thousands of concurrent queries distributed among thousands of processing cores. An approach to ensure isolation in the system is further discussed in section \ref{sec:out-of-order}.
-	\item \textbf{Scalability}: The system must be able to handle a large number of parallel queries and have enhanced performance when given more hardware resources, in this case processor count.	This is arguably the most important of all requirements, as the SpiNNaker team is currently focusing on building a large scale machine composed of 1,000,000 processing cores. If this application scales well, it will quickly be able to show the strengths and weaknesses of the machine.
+	\item \textbf{Scalability}: The system must be able to handle many parallel queries and have enhanced performance when given more hardware resources, in this case processor count.	This is arguably the most important of all requirements, as the SpiNNaker team is currently focusing on building a large scale machine composed of 1,000,000 processing cores. If this application scales well, it will quickly be able to show the strengths and weaknesses of the machine.
 \end{itemize}
 
-These main requirements do not cover two of the four ACID (Atomicity, Consistency, Durability, Isolation) properties of a database: atomicity and consistency. Atomicity, althogh very important on a large commercial application, is extremely hard to achieve in a descentralized system, with the use of complex multi-core rollbacks, and falls out of the scope of this experimental project. Consistency is significant when ensuring data written to the database is valid according to constraints, triggers and cascades, which are originally non-existent in a reduced instruction data store and do not contribute to the project research.
+These main requirements do not cover two of the four ACID (Atomicity, Consistency, Durability, Isolation) properties of a database: atomicity and consistency. Atomicity, although very important on a large commercial application, is extremely hard to achieve in a decentralized system, with the use of complex multi-core rollbacks, and falls out of the scope of this experimental project. Consistency is significant when ensuring data written to the database is valid according to constraints, triggers and cascades, which are originally non-existent in a reduced instruction data store and do not contribute to the project research.
 
-Lastly another outstanding requirement not included in the plan was a strong security protocol. Data encryption and authorization have many advantages, but present themselves as unecessary complexity for a small, private, experimental project.
+Lastly another outstanding requirement not included in the plan was a strong security protocol. Data encryption and authorization have many advantages, but present themselves as unnecessary complexity for a small, private, experimental project.
 
 \subsection{Technologies}
 Part of the project plan involves research on the SpiNNaker hardware and software stack, extensively used on my project. Given the steep learning curve of a low level distributed system and event driven platform, on the 7\textsuperscript{th} of September 2015, I attended the \textit{5\textsuperscript{th} SpiNNaker Workshop}, where tens of researchers from around the globe gathered for a one week course on the SpiNNaker Project in Manchester. I was officially introduced to the team, whom I would learn from and work with for the rest of the year.
@@ -47,7 +47,7 @@ Internally, I designed SpiDB to have a hierarchical tree structure architecture,
 
 The following binaries run on different cores on the chip, each with a specific role:
 \begin{itemize}
-	\item \textbf{root}: Each chip contains a single \textit{root} node, which handles incomming packets from \textit{host} by redirecting them to \textit{branch} and \textit{leaf} nodes, in an intelligent way, for parallel processing. Thus it reads user queries and manages load balancing throughout the board.
+	\item \textbf{root}: Each chip contains a single \textit{root} node, which handles incoming packets from \textit{host} by redirecting them to \textit{branch} and \textit{leaf} nodes, in an intelligent way, for parallel processing. Thus it reads user queries and manages load balancing throughout the board.
 	\item \textbf{branch}: The middle layer is composed of 4 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core.
 	\item \textbf{leaf}: The user queries are finally processed by 12 \textit{leaf} nodes per chip, with the aim of storing and retrieving database entries (key-value pairs or table rows) on shared memory, unlike other nodes which handle mostly communications.
 \end{itemize}
@@ -71,9 +71,9 @@ The following binaries run on different cores on the chip, each with a specific 
 \end{minipage}
 \end{figure}
 
-There are two important advantages, in favour of scalability, which lead me to make this design choice. Firstly, SpiNNaker communication is unreliable, meaning that a lot of traffic and a central point of failure cause large packet drop rate. This hierarchical structure strongly reduces the problem, and it assures cores will never receive packets from more than 4 other cores, distributing queries in an efficient way and protecting cores from excessive incomming packets. Secondly this approach is inheritably beneficial for merges and aggregation (eg. sql keywords COUNT, MAX, MIN, AVG, SUM, etc.), as these can be done on different layers over iterations. 
+There are two important advantages, in favour of scalability, which lead me to make this design choice. Firstly, SpiNNaker communication is unreliable, meaning that a lot of traffic and a central point of failure cause large packet drop rate. This hierarchical structure strongly reduces the problem, and it assures cores will never receive packets from more than 4 other cores, distributing queries in an efficient way and protecting cores from excessive incoming packets. Secondly this approach is inheritably beneficial for merges and aggregation (eg. sql keywords COUNT, MAX, MIN, AVG, SUM, etc.), as these can be done on different layers over iterations. 
 
-A disadvantage of this design is that less cores perform the actual storage and retrival of data. Out of 16 application cores, 4 are used only for distribution of the query plan (\textit{root} and \textit{branches}). This consequently impacts performance, as each \textit{leaf} node will be assigned more memory to read and will be kept busier with query processing.
+A disadvantage of this design is that less cores perform the actual storage and retrieval of data. Out of 16 application cores, 4 are used only for distribution of the query plan (\textit{root} and \textit{branches}). This consequently impacts performance, as each \textit{leaf} node will be assigned more memory to read and will be kept engaged with query processing.
 
 \section{Implementation}
 \label{sec:implementation}
@@ -269,9 +269,9 @@ Internally the following steps occur:
 Complexity: linear to the size of the input, constant to database size.
 
 \subsubsection{SELECT}   
-In the SpiDB system, multiple entries from a table can be retrieved using the \textit{SELECT} query, following the standard SQL syntax. Selection criteria can be specified by the user and matching results are streamed until a timeout is reached. If no value in the table matches such criteria, there will be no response from the board, which is a consequence of not making use of internal acknowledgements, as discussed in section \ref{sec:unreliable_comm}. This is a similar behaviour to \textit{pull} requests. 
+In the SpiDB system, multiple entries from a table can be retrieved using the \textit{SELECT} query, following the standard SQL syntax. Selection criteria can be specified by the user and matching results are streamed until a time-out is reached. If no value in the table matches such criteria, there will be no response from the board, which is a consequence of not making use of internal acknowledgements, as discussed in section \ref{sec:unreliable_comm}. This is a similar behaviour to \textit{pull} requests. 
 
-The select query has the capability of producing a very large amount of traffic in the system, as it is the only query with a variable number of packets returned. All other queries have at most one acknowledgement per incomming packet. 
+The select query has the capability of producing a very large amount of traffic in the system, as it is the only query with a variable number of packets returned. All other queries have at most one acknowledgement per incoming packet. 
 
 Example usage:
 \begin{lstlisting}
@@ -305,7 +305,7 @@ Although a graphical user interface was not an essential part of the project pla
 \section{Testing and Debugging}
 I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start. Running tests can be seen in figure \ref{fig:testing}. Testing and development was done from the bottom up, starting from internal memory management, core communication and finally the user interface and host communication.
 Testing involved initially a number of insert queries with different types and sizes. Given the SpiNNaker architecture is word aligned, it was important to test boundaries along data sizes along multiples of 4 bytes. Examples of tests run can be seen on table \ref{table:tests}.
-Both the key-value store and the SQL-RDMS were also tested for their performance and scalability, running over 100,000 symultaneous incomming queries with real data pulled from a modern English vocabulary. The results from these experiments can be read on chapter \ref{cha:eval}.
+Both the key-value store and the SQL-RDMS were also tested for their performance and scalability, running over 100,000 simultaneous incoming queries with real data pulled from a modern English vocabulary. The results from these experiments can be read on chapter \ref{cha:eval}.
 
 \begin{table}
 \begin{tabular}{ l | l | l | l | l }
@@ -325,7 +325,7 @@ PUT & "\begin{CJK*}{UTF8}{bsmi}你\end{CJK*}" & "\begin{CJK*}{UTF8}{bsmi}好\end
 PULL & "hello" & & "world" & \\
 PULL & 42 & & "life" & \\
 PULL & "abc" & & 123 & \\
-PULL & "HELLO" & & failure & case sensitive \\
+PULL & "HELLO" & & failure & case-sensitive \\
 PULL & (very long string) & & failure & 256-byte limit for now \\
 PULL & "a new key" & & failure & key does not exist \\
 \end{tabular}
@@ -333,7 +333,7 @@ PULL & "a new key" & & failure & key does not exist \\
 \label{table:tests}
 \end{table}
 
-Realtime debugging on the SpiNNaker board is relatively hard, but luckly the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug} (\textit{https://github.com/SpiNNakerManchester/ybug}), also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality.\cite{ybug} On the \textit{host} Python code, debugging was done using the Pycharm IDE runtime tools.
+Real-time debugging on the SpiNNaker board is relatively hard, but luckily the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug} (\textit{https://github.com/SpiNNakerManchester/ybug}), also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality.\cite{ybug} On the \textit{host} Python code, debugging was done using the Pycharm IDE runtime tools.
 
 \begin{figure}
   \centering
@@ -351,16 +351,16 @@ This section outlines a list of different challenges and problems I had to face 
 
 \subsection{Out-of-order execution}
 \label{sec:out-of-order}
-A multi-threaded system must account for the fact that queries may not be executed in the order they are issued, which can be a concern depending on the application. As SpiNNaker is a distributed architecture, it cause problems and inconsistencies.
+A multi-threaded system must account for the fact that queries may not be executed in the order they are issued, which can be a concern depending on the application. As SpiNNaker is a distributed architecture, it causes problems and inconsistencies.
 For example, using SpiDB, if we try to execute the following code sequence in order:\\
 \begin{lstlisting}[caption={Non-blocking execution}, label=list:non-blocking]
 put "hello" "world"
 pull "hello"
 \end{lstlisting}
 
-We are not guaranteed that the \textit{pull} query will retrieve the value "world". As both queries are executed symultaneously on the SpiNNaker board, there is a chance that the \textit{pull} operation will terminate before the \textit{put} does, thus failing to return a value.
+We are not guaranteed that the \textit{pull} query will retrieve the value "world". As both queries are executed simultaneously on the SpiNNaker board, there is a chance that the \textit{pull} operation will terminate before the \textit{put} does, thus failing to return a value.
 
-As a solution to this dependency constraint, my SpiDB database API includes the syntax symbol "." (dot) which blocks execution until all preceeding operations terminate. This allows the programmer to control execution flow, choosing what is allowed to compute out-of-order (in parallel) and what should be sequentialised at a cost of performance. This is a similar concept to the Verilog blocking and non-blocking assignments.
+As a solution to this dependency constraint, my SpiDB database API includes the syntax symbol "." (dot) which blocks execution until all preceding operations terminate. This allows the programmer to control execution flow, choosing what is allowed to compute out-of-order (in parallel) and what should be sequentialised at a cost of performance. This is a similar concept to the Verilog blocking and non-blocking assignments.
 
 \begin{lstlisting}[caption={Blocking execution}, label=list:blocking1]
 put "hello" "world"
@@ -380,24 +380,24 @@ pull "life"
 pull 123
 \end{lstlisting}
 
-It is worth noting that although non-block operations can cause out-of-order execution, it does not occur very frequently. This is because, when transmitting data to the board, queries are serialised over ethernet in order of appearence and in addition there is a small forced transmission delay between these packets. This will be further discussed on chapter \ref{cha:eval}.
+It is worth noting that although non-block operations can cause out-of-order execution, it does not occur very frequently. This is because, when transmitting data to the board, queries are serialised over Ethernet in order of appearance and in addition there is a small forced transmission delay between these packets. This will be further discussed on chapter \ref{cha:eval}.
 
 \subsection{Unreliable communication}
 \label{sec:unreliable_comm}
 
-The SpiNNaker communication protocol can be unreliable, as packets are not guaranteed to arrive at destination, as discussed earlier in section \ref{sec:comm_fabric}. This effect is worsen when there is large traffic in the system, so the more packets are being sent, the more packets are lost. While developing the application I had to consider this cost, assuring reduced communication when possible. 
+The SpiNNaker communication protocol can be unreliable, as packets are not guaranteed to arrive at destination, as discussed earlier in section \ref{sec:comm_fabric}. This effect is worsened when there is large traffic in the system, so the more packets are being sent, the more packets are lost. While developing the application I had to consider this cost, assuring reduced communication when possible. 
 
 Queries such as \textit{put} issue only one packet at a time, allowing an end-to-end acknowledgement without significant packet drops or performance costs. For this reason the \textit{put} query, alongside the SQL commands \textit{create} and \textit{insert} always expect a response, which contains timing information and a flag whether it was successful or not. The steps of running SpiDB queries can be revised in section \ref{sec:implementation}.
 
 On the other hand the \textit{pull} and \textit{select} commands issue multicast packets (one-to-many). This means for each query, a packet is sent to up to hundreds of codes, which SpiNNaker is particularly optimized for, but the opposite (many-to-one) is more difficult. Multiple cores sending \textit{SDP} packets to a single core results on a very large packet drop. Only a total of 4 of these packets arrive successfully, as it is the limit of \textit{SDP} channels per core. In the worst case, too many packets have also the capability of crashing the destination core.
 This means when a packet has multiple destinations, acknowledgements would worsen the situation, as most of these would be dropped and it would highly increase traffic in the system, which itself is a reason for packet loss.
 
-This analysis has lead me to make the design decision of not using internal acknowledgements for every packet sent. In \textit{pull} queries, \textit{leaf} nodes only respond when they have found the specified key, which means there will be at most one acknowledegement. If the key is not found on the database, not a single \textit{leaf} core will respond, which can only be known externally with the use of a timeout.
+This analysis has lead me to make the design decision of not using internal acknowledgements for every packet sent. In \textit{pull} queries, \textit{leaf} nodes only respond when they have found the specified key, which means there will be at most one acknowledgement. If the key is not found on the database, not a single \textit{leaf} core will respond, which can only be known externally with the use of a time-out.
 
 The advantage of this approach is that it increases speed of execution for successful queries and avoids excessive traffic in the system, increasing reliability. This comes at the cost of slow execution of instances of \textit{pull} requests where the key does not exist on the database. Using this approach performance is poor when requested entries do not exist. Assuming most of the time users will try to retrieve entries previously inserted on the database, I evaluate this decision to be wise.
 
 \subsection{API Bugs}
-I have been one of the few users of a large amount of the SpiNNaker API, currently under contruction. This means some of it has not been fully tested, resulting in strange behaviour at times, making debugging of my own application difficult. Besides aiming to gather benchmarks for SpiNNaker, my project itself has been very useful when exposing unexpected errors or inconsistencies in the team's codebase.
+I have been one of the few users of a large amount of the SpiNNaker API, currently under construction. This means some of it has not been fully tested, resulting in strange behaviour at times, making debugging of my own application difficult. Besides aiming to gather benchmarks for SpiNNaker, my project itself has been very useful when exposing unexpected errors or inconsistencies in the team's codebase.
 
 Facing these issues was certainly a challenge, as they belonged to domains I had little knowledge of. I was a good opportunity for me to learn and improve code quality of a large, collaborated project, by testing its usability and evaluating its outputs. This means my project involved not only developing the database application, but also collaborating to improve SpiNNaker itself.
 

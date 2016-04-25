@@ -1,0 +1,47 @@
+\chapter{Conclusion}
+\label{cha:conclusion}
+SpiNNaker is a highly distributed hardware architecture originally designed to simulate the interaction between billions of neurons in the brain. This project involved making use of such hardware to build a Database Management System, namely SpiDB, with the aim of evaluating how SpiNNaker may perform under a general purpose environment, its strengths and weaknesses.
+
+In the context of a general purpose application, as discussed on chapter \ref{cha:eval}, the main limitations outlined were:
+\begin{itemize}
+\setlength\itemsep{-0.3em}
+	\item SDRAM bandwidth saturation with concurrent memory access
+	\item Central point of failure and slow-down with Ethernet communication
+	\item Frequent packet drops with bursts of SDP and P2P packets
+	\item Limited core private memory DTCM to store incoming packets and data
+\end{itemize}
+
+On the contrary, SpiNNaker has demostrated its strengths on:
+\begin{itemize}
+\setlength\itemsep{-0.3em}
+	\item High scalability on number of cores and boards when arranged as a tree structure
+	\item Low network latency for a large number of cores
+\end{itemize}
+
+The project aim has been successfully reached and important achievements were made on the way.
+
+\section{Achievements}
+This year long project allowed me to not only build an application which may positively impact the SpiNNaker research, but also granted me with valuable achievements, both personal and professional:
+
+\begin{itemize}
+	\item Collaboration on an IEEE article publication, alongside Alan Stokes, Thomas Heinis and Yordan Chaparov, currently under pending approval, namely \textit{Exploring the Energy Efficiency of Neuromorphic Hardware for Data Management}.
+	\item Opportunity mentoring Yordan Chaparov, a student at Imperial College London currently developing a SpiNNaker data storage program.
+	\item Experience discussing distributed database concepts with Thomas Heinis, a professor of Databases at Imperial College London, who agreed to support me on Ph.D. application to such university.
+	\item Participation on a large, international, research project on emerging hardware.
+	\item Enhanced knowledge on low-level C and Python, languages which I previously had very little experience with.
+\end{itemize}
+
+\section{Future work}
+This project has been the tip of the iceberg of what a fully-functional SpiNNaker database management system can be. All code written by me is now part of the official open-source SpiNNaker Software Stack. This means SpiDB is likely to expand in the future or serve as an example application running on SpiNNaker, accessible by researchers and developers around the globe.
+
+These are some features which can be implemented or improved in the future:
+
+\begin{itemize}
+	\item \textbf{Caching} and \textbf{indexing}: frequently accessed areas of shared SDRAM memory can be cached at the smaller but much faster private DTCM.
+	\item \textbf{Security} and \textbf{multi-user access}: different sections of the database can have restricted access through credentials checking.
+	\item \textbf{Scalability testing} on the large scale \textit{million core machine}.
+	\item An application \textbf{server} allowing queries to be requested over the internet from different locations.
+	\item Improve \textbf{reliability} and increase \textbf{query sizes}, perhaps by implementing a protocol on top of the SDP and MC layer. As of now packets are limited to 256-bytes, with unreliability during busy times.
+	\item \textbf{Self balancing} during idle times. While no queries are being executed, cores could distribute their contents in a balanced way for faster retrieval. Indexing or other pre-processing could also be executed on the meantime.
+	\item \textbf{Additional operations} supporting table merges, triggers and aggregations.
+\end{itemize}

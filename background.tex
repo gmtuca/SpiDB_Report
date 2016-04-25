@@ -47,12 +47,12 @@ Figure \ref{fig:4node} shows SpiNN-3, a 4 chip SpiNNaker board with 72 processor
 \section{SpiNNaker Communication fabric}
 \label{sec:comm_fabric}
 
-Cores on a SpiNNaker board exchange packets through wired connections over a large communication fabric. Each SpiNNaker chip is surrounded by a lightweight, packet-switched asynchronous communication infrastructure.\cite{spinnchip} Packet exchange can be used to transmit information initially private to a core and it is managed under the API's even driven architecture, thus incomming packets issue an interrupt on the receiving core.
+Cores on a SpiNNaker board exchange packets through wired connections over a large communication fabric. Each SpiNNaker chip is surrounded by a lightweight, packet-switched asynchronous communication infrastructure.\cite{spinnchip} Packet exchange can be used to transmit information initially private to a core and it is managed under the API's even driven architecture, thus incoming packets issue an interrupt on the receiving core.
 
-There are currently 4 different communication protocols in the system. It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsen if there is increased traffic in the communication fabric. Sending a large amount of packets symultaneously is likely to result on packet drops.
+There are currently 4 different communication protocols in the system. It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsened if there is increased traffic in the communication fabric. Sending a large amount of packets simultaneously is likely to result on packet drops.
 
 \begin{itemize}
-\item \textbf{Multicast (MC)}: The MC protocol, originally designed to simulate neural spikes, is used when a sigle source issues information to multiple destinations (one-to-many), as a fan-out topology.\cite{overviewspinn} The packet contains a 32 bit routing key, used by an external router process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
+\item \textbf{Multicast (MC)}: The MC protocol, originally designed to simulate neural spikes, is used when a single source issues information to multiple destinations (one-to-many), as a fan-out topology.\cite{overviewspinn} The packet contains a 32 bit routing key, used by an external router process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
 
 \item \textbf{Point-to-Point (P2P)}: P2P packets have a single source and a single destination core (one-to-one). Each packet contains a 16-bit source ID, destinarion ID and an optional 32-bit payload.\cite{datasheet}
 On top of this layer, the SpiNNaker Datagram Protocol (SDP) was designed to allow transfers of up to 256-bytes of data between two cores, by sending a sequence of P2P packets with payloads.\cite{sdp} SDP can be used to communicate to the \textit{host} machine, wrapped around a larger UDP packet.

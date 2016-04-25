@@ -3,7 +3,7 @@ This chapter describes the machine specifications and code instances used to run
 
 \section{Specification}
 \label{sec:appendix-specs}
-All experiments and instances of SpiDB reported on this dissertation were run on an ASUS X555L quadcore Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 8gb DDR3 RAM @ 1600 MHz, 64-bit Ubuntu 15.04 machine connected over ethernet to a 4-chip SpiNN-3 board, produced in September 2011.
+All experiments and instances of SpiDB reported on this dissertation were run on an ASUS X555L quad core Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz, 8gb DDR3 RAM @ 1600 MHz, 64-bit Ubuntu 15.04 machine connected over Ethernet to a 4-chip SpiNN-3 board, produced in September 2011.
 
 The \textit{Memcached} and \textit{Redis} benchmarks were run under such specifications, as well as the transmission rate experiments.
 
@@ -57,9 +57,9 @@ spin1_callback_on(SDP_PACKET_RX,    sdp_packet_callback, 0);
 
 
 \subsection{Storing packets}
-The following code snippet (listing \ref{lst:sdp_packet_callback}) describes an efficient way of storing incomming SDP packets, to reduce packet drop, and process them under a lower priority, as discussed in section \ref{sec:eval_comm_rel}.
+The following code snippet (listing \ref{lst:sdp_packet_callback}) describes an efficient way of storing incoming SDP packets, to reduce packet drop, and process them under a lower priority, as discussed in section \ref{sec:eval_comm_rel}.
 
-\lstinputlisting[language=C, caption=Storing incomming packets into a queue, label={lst:sdp_packet_callback}]{code/sdp_packet_callback.c}
+\lstinputlisting[language=C, caption=Storing incoming packets into a queue, label={lst:sdp_packet_callback}]{code/sdp_packet_callback.c}
 
 \clearpage
 \newpage
