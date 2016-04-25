@@ -106,7 +106,7 @@ In this case \textit{SpiDBCommands} is set to the constant representing the put 
 	\item \textbf{Naive}: as packets arrive, they are assigned to a different \textit{leaf} node in a Round-Robin manner.
 	\item \textbf{Hashing}: the given key is used to produce a 32-bit hash value, which is decoded to assign the query to a specific \textit{leaf} node.
 \end{itemize}
-\item \textit{root} communicates to chosen \textit{leaf} node with \textit{put} contents via \textit{SDP} (figure \ref{fig:root-leaf}).
+\item \textit{root} communicates to chosen \textit{leaf} node with \textit{put} contents via SDP (figure \ref{fig:root-leaf}).
 \item \textit{leaf} node triggers an interrupt and stores key-value entry into its dedicated region of SDRAM.
 \item \textit{leaf} sends an acknowledgement message over UDP back to host (figure \ref{fig:leaf-host}).
 \item User receives timing information and query result.

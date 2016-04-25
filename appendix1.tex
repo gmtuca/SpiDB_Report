@@ -85,8 +85,18 @@ The following table contains data from multiple runs of SpiDB instances with 100
 4	& 98.432 	& 243 \\
 \end{tabular}
 
-%\section{Queries}
-%\label{sec:appendix-queries}
+\section{Query formats}
+\label{sec:appendix-queries}
+This section contains the query structs and enums used for internal and external communication of the database. The two supported variable types are: \textit{int} and \textit{char[]} (string).
 
-%\lstinputlisting[language=C]{code/table.c}
+\large Types:
 
+\lstinputlisting[language=C]{code/types.c}
+
+\large Key-value structs:
+
+\lstinputlisting[language=C]{code/db_type_kv.c}
+
+\large SQL database structs:
+
+\lstinputlisting[language=C]{code/db_type_relational.c}
