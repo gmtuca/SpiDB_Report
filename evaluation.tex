@@ -38,9 +38,9 @@ High priority should be assigned to storing incoming packets into a buffer and t
 \label{fig:transmission-delay}
 \end{figure}
 	
-A measured test, transmitting data from a host machine to an Ethernet attached SpiNNaker chip and then to an Application Processor on that node via shared memory, achieved speeds in excess of 22 Mb/s.\cite{scalablecomm}
+A measured test, transmitting data from a host machine to an Ethernet attached SpiNNaker chip and then to an Application Processor on that node via shared memory, achieved speeds in excess of 22 Mb/s \cite{scalablecomm}.
 
-This evaluation is important because it allows finding the optimal transmission delay and latency for an application. A developer on SpiNNaker using the SDP protocol, which is experimental and yet to be optimised\cite{scalablecomm}, needs to find the balance between transmission rate and reliability, which are inversely proportional.
+This evaluation is important because it allows finding the optimal transmission delay and latency for an application. A developer on SpiNNaker using the SDP protocol, which is experimental and yet to be optimised \cite{scalablecomm}, needs to find the balance between transmission rate and reliability, which are inversely proportional.
 
 On SpiDB, I experimented with different time delays when transmitting packets from host over ethernet to a core on SpiNNaker, in order to find the best evaluation. The speed of one operation is calculated as the time of successful reply minus the time that operation was sent from host, thus being a round-trip-time plus internal processing time. The performance is calculated as the amount of operations successfully executed in one second.
 
@@ -74,7 +74,7 @@ Local distribution emulates close proximity destinations. Traffic following a un
 %what are reasons for packets to drop? because thingy just takes 1 microsecond or does it?...
 
 \section{Performance benchmark}
-In order to evaluate the performance of my database management system, I compared it with two of the most popular RAM-based Key-value pair databases: \textbf{Memcached}\cite{memcached} and \textbf{Redis}\cite{redis}. These systems are extremely powerful and have been on the market for multiple years, thus serve as good basis to push forward my application, SpiDB.
+In order to evaluate the performance of my database management system, I compared it with two of the most popular RAM-based Key-Value pair databases: \textbf{Memcached} \cite{memcached} and \textbf{Redis} \cite{redis}. These systems are extremely powerful and have been on the market for multiple years, thus serve as good basis to push forward my application, SpiDB.
 
 Figure \ref{fig:write-perf-benchmark} shows a performance plot of the SpiNNaker Database (SpiDB) against these competitors for 100,000 consecutive \textit{put} operations. It can be seen that SpiDB runs at about 7,000-8,000 operations per second, which is slower than the others by a factor of 8. Performance for all systems was mostly constant given input size, up to the maximum SDP data size of 256-bytes. More specification and data gathered can be found at appendix under section \ref{sec:appendix-specs}.
 
@@ -108,7 +108,7 @@ As discussed in section \ref{sec:spinn_arch}, a single SpiNNaker chip contains 1
 \label{fig:sdram_bandwidth}
 \end{figure}
 
-In order to find an efficient way to collectively access SDRAM, its bandwidth has to be taken into account. Figure \ref{fig:sdram_bandwidth}, plotted by E. Painkras et al. \cite{painkras}, shows the aggregate SDRAM bandwidth utilization of a number of cores on a single SpiNNaker chip, increased progressively from 1 to 14. The plot outlines the DMA transfer rate for each core as they simultaneously access the shared resource. It is clear from the figure that the read channel saturates just over 600 MB/s and the write channel adds around 300 MB/s on top of that, for a total aggregate bandwidth of 900 MB/s. Because memory reads and writes share the same network channel, an increase in the number of writes decreases the read bandwidth. Memory bandwidth, although saturated, is distributed fairly among all cores. \cite{painkras}
+In order to find an efficient way to collectively access SDRAM, its bandwidth has to be taken into account. Figure \ref{fig:sdram_bandwidth}, plotted by E. Painkras et al. \cite{painkras}, shows the aggregate SDRAM bandwidth utilization of a number of cores on a single SpiNNaker chip, increased progressively from 1 to 14. The plot outlines the DMA transfer rate for each core as they simultaneously access the shared resource. It is clear from the figure that the read channel saturates just over 600 MB/s and the write channel adds around 300 MB/s on top of that, for a total aggregate bandwidth of 900 MB/s. Because memory reads and writes share the same network channel, an increase in the number of writes decreases the read bandwidth. Memory bandwidth, although saturated, is distributed fairly among all cores \cite{painkras}. 
 
 The progression of Core 6 on the plot shows that if the DMA controller is free, a single core can read from shared memory at 300 MB/s, but if such memory is being constantly accessed by other processors, each will only retrieve data at a rate of around 50 MB/s (6 times slower than doing so exclusively). This evaluation is important because it shows the limitation of all cores frequently accessing shared memory simultaneously, which is exactly the case of the SpiDB \textit{pull} and \textit{SELECT} queries.
 

@@ -8,7 +8,7 @@ By being part of the SpiNNaker team in Manchester, I was directly exposed to the
 \section{Planning}
 The first phase of my project involved making a detailed plan of approach, taking into consideration the time resources and learning curve. Such a plan was useful to set myself deadlines for deliverables in the cycle of short iterations and keep track of progress. A high level chart with the weekly delivery plan can be seen on figure \ref{fig:plan}.
 
-The overall project was divided into two phases: developing a No-SQL Key-value store for insertion and retrieval of non-structured data and an SQL based Relational Database for creation and manipulation of table structures. 
+The overall project was divided into two phases: developing a No-SQL Key-Value store for insertion and retrieval of non-structured data and an SQL based Relational Database for creation and manipulation of table structures. 
 
 \begin{figure}
 \center
@@ -49,7 +49,7 @@ The following binaries run on different cores on the chip, each with a specific 
 \begin{itemize}
 	\item \textbf{root}: Each chip contains a single \textit{root} node, which handles incoming packets from \textit{host} by redirecting them to \textit{branch} and \textit{leaf} nodes, in an intelligent way, for parallel processing. Thus it reads user queries and manages load balancing throughout the board.
 	\item \textbf{branch}: The middle layer is composed of 4 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core.
-	\item \textbf{leaf}: The user queries are finally processed by 12 \textit{leaf} nodes per chip, with the aim of storing and retrieving database entries (key-value pairs or table rows) on shared memory, unlike other nodes which handle mostly communications.
+	\item \textbf{leaf}: The user queries are finally processed by 12 \textit{leaf} nodes per chip, with the aim of storing and retrieving database entries (Key-Value pairs or table rows) on shared memory, unlike other nodes which handle mostly communications.
 \end{itemize}
 	These roles can be visualised on figures \ref{fig:tree} and \ref{fig:tree-chip}.
 	
@@ -79,12 +79,12 @@ A disadvantage of this design is that less cores perform the actual storage and 
 \label{sec:implementation}
 This section describes the final implementation achieved during the development of the project. It outlines the supported database operations, their internal functionality, expected results and performance.
 
-\subsection{Key-value Store}
-The first half of the project involved developing a distributed key-value store, in which users can insert and retrieve data entries in a dictionary form. This means the user must be able to set keys mapping to values, both of type \textit{int} or \textit{string}, and retrieve such values when given the same keys. This section describes in detail the internal processing of the insert (\textit{put}) and retrieve (\textit{pull}) queries. 
+\subsection{Key-Value Store}
+The first half of the project involved developing a distributed Key-Value store, in which users can insert and retrieve data entries in a dictionary form. This means the user must be able to set keys mapping to values, both of type \textit{int} or \textit{string}, and retrieve such values when given the same keys. This section describes in detail the internal processing of the insert (\textit{put}) and retrieve (\textit{pull}) queries. 
 
 \subsubsection{PUT}
 The \textit{put} operation is the main way of inserting data onto the SpiDB distributed database. 
-Upon completion, such operation will store the specified key, mapping to its value, on the memory of an arbitrary chip in the Spinnaker board (as chosen by the \textit{root} core). This operation expects an acknowledgement from the core which stored the entry. It has complexity linear to the size of the input key-value and constant to database size.
+Upon completion, such operation will store the specified key, mapping to its value, on the memory of an arbitrary chip in the Spinnaker board (as chosen by the \textit{root} core). This operation expects an acknowledgement from the core which stored the entry. It has complexity linear to the size of the input Key-Value and constant to database size.
 
 Example usage:
 \begin{lstlisting}
@@ -107,7 +107,7 @@ In this case \textit{SpiDBCommands} is set to the constant representing the put 
 	\item \textbf{Hashing}: the given key is used to produce a 32-bit hash value, which is decoded to assign the query to a specific \textit{leaf} node.
 \end{itemize}
 \item \textit{root} communicates to chosen \textit{leaf} node with \textit{put} contents via SDP (figure \ref{fig:root-leaf}).
-\item \textit{leaf} node triggers an interrupt and stores key-value entry into its dedicated region of SDRAM.
+\item \textit{leaf} node triggers an interrupt and stores Key-Value entry into its dedicated region of SDRAM.
 \item \textit{leaf} sends an acknowledgement message over UDP back to host (figure \ref{fig:leaf-host}).
 \item User receives timing information and query result.
 \end{enumerate}
@@ -156,7 +156,7 @@ Where \textit{SpiDBCommands} represents the pull operation constant, \textit{id}
 	\item \textbf{Naive}: there is no knowledge of which, if any, chip contains the given key. Therefore \textit{root} issues a multicast packet to all \textit{leaf} nodes on the board, requesting them to linearly scan their regions of shared memory, searching for the entry.
 	\item \textbf{Hashing}: the key is used to produce a 32-bit hash value, which, if existent on the database, must be present at the memory of a specific core, pointed by the decoding of such hash value. Therefore \textit{root} node sends a single SDP packet to chosen \textit{leaf}, requesting it to search for the given key.
 \end{itemize}
-\item Each \textit{leaf} node that received a search request triggers an interrupt and searches for key-value mapping in SDRAM memory. If key is found, value is returned over UDP back to host.
+\item Each \textit{leaf} node that received a search request triggers an interrupt and searches for Key-Value mapping in SDRAM memory. If key is found, value is returned over UDP back to host.
 \item User receives timing information and query result.
 \end{enumerate}
 
@@ -221,7 +221,7 @@ Algorithms \ref{alg:root} and \ref{alg:leaf} show a high level simplification of
 \end{algorithm}
 
 \subsection{Relational Database}
-The second half of the project involves developing an SQL-based distributed database on top of the key-value store layer. Entries are stored in a structured way, bounded by the definition of tables. In this RDMS users can create tables with different fields, insert values and retrieve them with given conditions. This section describes in detail the internal processing of the \textit{create}, \textit{insert} and \textit{select} queries. 
+The second half of the project involves developing an SQL-based distributed database on top of the Key-Value store layer. Entries are stored in a structured way, bounded by the definition of tables. In this RDMS users can create tables with different fields, insert values and retrieve them with given conditions. This section describes in detail the internal processing of the \textit{create}, \textit{insert} and \textit{select} queries. 
 
 \subsubsection{CREATE}
 In SpiDB, the \textit{create} operation is used to generate a table definition in the SpiNNaker hardware. Data can only be inserted into the database if a corresponding table exists. This query has as parameters the table name, field names and their types (\textit{int} or \textit{string}).
@@ -258,7 +258,7 @@ INSERT INTO People(name,lastname) VALUES ("Canny","Dattlin");
 Internally the following steps occur:
 \begin{enumerate}
 \item User issues query of format \textit{INSERT INTO table(column1, ...) VALUES (value1, ...)} on host machine.
-\item Query is broken down into column-value pairs, containing also value type, size and specified table (eg. ["name":("Arthur", type: string, size: 6)]). This step is necessary because SDP packets have a limit size of 256-bytes, thus not being able to carry one single large packet containing all the assignments for a table row. Streaming smaller packets also decreases the need for a large storage buffer at the destination.\cite{sdp}
+\item Query is broken down into column-value pairs, containing also value type, size and specified table (eg. ["name":("Arthur", type: string, size: 6)]). This step is necessary because SDP packets have a limit size of 256-bytes, thus not being able to carry one single large packet containing all the assignments for a table row. Streaming smaller packets also decreases the need for a large storage buffer at the destination \cite{sdp}.
 \item Column-value pairs (entries) are converted into a byte array, sent to the board, being received and decoded by the \textit{root} node.
 \item The column-value pair query is forwarded to a \textit{leaf} node in a Round-Robin way.
 \item \textit{leaf} node receives query, checks if specified table exists in shared memory SDRAM and reads its definition.
@@ -305,7 +305,7 @@ Although a graphical user interface was not an essential part of the project pla
 \section{Testing and Debugging}
 I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start. Running tests can be seen in figure \ref{fig:testing}. Testing and development was done from the bottom up, starting from internal memory management, core communication and finally the user interface and host communication.
 Testing involved initially a number of insert queries with different types and sizes. Given the SpiNNaker architecture is word aligned, it was important to test boundaries along data sizes along multiples of 4 bytes. Examples of tests run can be seen on table \ref{table:tests}.
-Both the key-value store and the SQL-RDMS were also tested for their performance and scalability, running over 100,000 simultaneous incoming queries with real data pulled from a modern English vocabulary. The results from these experiments can be read on chapter \ref{cha:eval}.
+Both the Key-Value store and the SQL management systems were also tested for their performance and scalability, running over 100,000 simultaneous incoming queries with real data pulled from a modern English vocabulary. The results from these experiments can be read on chapter \ref{cha:eval}.
 
 \begin{table}
 \begin{tabular}{ l | l | l | l | l }
@@ -329,11 +329,11 @@ PULL & "HELLO" & & failure & case-sensitive \\
 PULL & (very long string) & & failure & 256-byte limit for now \\
 PULL & "a new key" & & failure & key does not exist \\
 \end{tabular}
-\caption{Examples of Key-value store test cases}
+\caption{Examples of Key-Value store test cases}
 \label{table:tests}
 \end{table}
 
-Real-time debugging on the SpiNNaker board is relatively hard, but luckily the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug} (\textit{https://github.com/SpiNNakerManchester/ybug}), also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality.\cite{ybug} On the \textit{host} Python code, debugging was done using the Pycharm IDE runtime tools.
+Real-time debugging on the SpiNNaker board is relatively hard, but luckily the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug} (\textit{https://github.com/SpiNNakerManchester/ybug}), also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality \cite{ybug}. On the \textit{host} Python code, debugging was done using the Pycharm IDE runtime tools.
 
 \begin{figure}
   \centering
@@ -409,7 +409,3 @@ The main API bugs I exposed and helped resolve were:
 
 % \item algorithms
 \end{itemize}
-
-
-
-
