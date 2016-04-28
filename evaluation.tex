@@ -2,12 +2,12 @@
 \label{cha:eval}
 This research project has among its main aims the evaluation of results, described in this chapter. It is important to analyse how this general purpose application performs under the SpiNNaker environments and what architectural limitations it faces, which is useful feedback to the team. The chapter outlines also performance benchmarks of SpiDB in comparison with other database systems and how it can be improved.
 
-\section{Transmission rate \& latency}
+\section{Reliability \& transmission rate}
 \label{sec:eval_comm_rel}
 
 According to my experiments, sending SDP packets immediately between two cores results on a very large packet drop ration. Without explicit delay/wait between the transmission of packets, the number of successful deliveries is only about 10\% of those sent for a large number of packets. This effect is strongly reduced by the addition of a small delay of 5-10$\mu$s, which guarantees over 99\% successful deliveries, as can be seen on table \ref{table:sdp_deliveries}. The table also shows that long intervals, greater than 10$\mu$s, are mostly redundant, as they do not decrease packet loss significantly, but tragically reduce throughput.
 
-Upon experimenting, I found that sending a large amount of consecutive, immediate packets (at least 1,000,000) has a chance of consequently crashing the destination core or causing it to reach the erraneous watchdog state (WDOG), meaning it cannot respond to commands.
+Upon experimenting, I found that sending a large amount of consecutive, immediate packets (at least 1,000,000) has a chance of consequently crashing the destination core or causing it to reach the erroneous watchdog state (WDOG), meaning it cannot respond to commands.
 
 \begin{table}
 \begin{tabular}{ r | c | c | c | c | c }
@@ -42,7 +42,7 @@ A measured test, transmitting data from a host machine to an Ethernet attached S
 
 This evaluation is important because it allows finding the optimal transmission delay and latency for an application. A developer on SpiNNaker using the SDP protocol, which is experimental and yet to be optimised \cite{scalablecomm}, needs to find the balance between transmission rate and reliability, which are inversely proportional.
 
-On SpiDB, I experimented with different time delays when transmitting packets from host over ethernet to a core on SpiNNaker, in order to find the best evaluation. The speed of one operation is calculated as the time of successful reply minus the time that operation was sent from host, thus being a round-trip-time plus internal processing time. The performance is calculated as the amount of operations successfully executed in one second.
+On SpiDB, I experimented with different time delays when transmitting packets from host over Ethernet to a core on SpiNNaker, in order to find the best evaluation. The speed of one operation is calculated as the time of successful reply minus the time that operation was sent from host, thus being a round-trip-time plus internal processing time. The performance is calculated as the amount of operations successfully executed in one second.
 
 Figure \ref{fig:transmission-delay} plots the performance (left Y axis) and packet drop percentage (right Y axis) of PUT operations  with the decrease of transmission delay. As can be seen, large packet transmission delays of 50-100$\mu$s are redundant, as they do not reduce packet drops, while being a high cost on performance. Naturally the more packets we can send in one second influences the speed of replies, thus improving performance. This hits a maximum at 40$\mu$s, with almost 10,000 op/sec, in which transmission is at a high rate with no loss of reliability. Transmission delays between 40-10$\mu$s result on a decrease of performance, because although packets are sent more frequently, a lot of them are dropped (up to about 35\%), being also extremely unreliable. Naturally performance of is inversely proportional to packet drop rate, as unsuccessful queries do not contribute to the final result. We reach the worst case at 10-5$\mu$s delay, when the destination core cannot cope with the speed of incoming packets, simply crashing and ceasing to respond. A very similar behaviour is visible for \textit{pull} operations, as plotted on figure \ref{fig:hash-performance}.
 
@@ -63,9 +63,13 @@ These results are largely influenced by the latency of the SDP datagram, driving
 	\includegraphics[width=.7\textwidth, natwidth=336, natheight=243]{images/latency.png}
 \end{center}
 \caption{Latency scalability under uniform and local traffic distributions \cite{scalablecomm}}
-\medskip
-\footnotesize
-Local distribution emulates close proximity destinations. Traffic following a uniform distribution represents a very pessimistic scenario in which locality is not exploited.
+\smallskip
+
+\caption*{\footnotesize 
+\setlength{\leftskip}{1.5cm}
+\setlength{\rightskip}{1.5cm}
+Local distribution emulates close proximity destinations. Traffic following a uniform distribution represents a very pessimistic scenario in which locality is not exploited.}
+
 \label{fig:latency}
 \end{figure}
 
@@ -92,7 +96,7 @@ Another weakness to the approach is the fact that the \textit{root} core is a ce
 
 Although from an initial evaluation it may seem that SpiNNaker is not capable of hosting a database efficiently, that can be proven wrong. It must be outlined that this performance cap is the limitation of a single, independent SpiNNaker board. The SpiNNaker hardware was designed to be inter-connected, allowing transfers of data between boards, which can be used to add another degree of scalability. This means multiple boards can be connected to the host/user and process a set of separate queries in a fully parallel way. Ideally this would result in a linear performance increase proportional to the number of boards connected, meaning that two boards will run the database operations twice faster than one board alone and so forth. From this analysis I can state that an instance of SpiDB running on 8-10 different 4-chip boards will perform better than \textit{Redis} or \textit{memcached} on commercial hardware. The SpiNNaker hardware is expensive to produce for now, but with a decrease on its prices in the future, it can be a very strong candidate for hosting a DBMS.
 
-This scalability work has not yet been fully tested, thus it may serve as constructive speculation for now. It should also be noted that realistically a perfectly linear performance increase with the increase of horsepower is not common, as other factors need to be taken into account, such as synchronization, fault tolerance, etc.
+This scalability work has not yet been fully tested, thus it may serve as constructive speculation for now. It should also be noted that realistically a perfectly linear performance increase with the increase of horsepower is not common, as other factors need to be taken into account, such as synchronisation, fault tolerance, etc.
 
 %response times. why are they so high sometimes?!?!
 
@@ -104,12 +108,12 @@ As discussed in section \ref{sec:spinn_arch}, a single SpiNNaker chip contains 1
 \begin{center}
 	\includegraphics[width=1.3\textwidth, natwidth=820, natheight=329]{images/sdram_bandwidth.png}
 \end{center}
-\caption{SDRAM bandwidth utilization \cite{painkras}}
+\caption{SDRAM bandwidth utilisation \cite{painkras}}
 \label{fig:sdram_bandwidth}
 \end{figure}
 
-In order to find an efficient way to collectively access SDRAM, its bandwidth has to be taken into account. Figure \ref{fig:sdram_bandwidth}, plotted by E. Painkras et al. \cite{painkras}, shows the aggregate SDRAM bandwidth utilization of a number of cores on a single SpiNNaker chip, increased progressively from 1 to 14. The plot outlines the DMA transfer rate for each core as they simultaneously access the shared resource \cite{multicoresystem}. It is clear from the figure that the read channel saturates just over 600 MB/s and the write channel adds around 300 MB/s on top of that, for a total aggregate bandwidth of 900 MB/s. Because memory reads and writes share the same network channel, an increase in the number of writes decreases the read bandwidth. Memory bandwidth, although saturated, is distributed fairly among all cores \cite{painkras}. 
+In order to find an efficient way to collectively access SDRAM, its bandwidth has to be taken into account. Figure \ref{fig:sdram_bandwidth}, plotted by E. Painkras et al. \cite{painkras}, shows the aggregate SDRAM bandwidth utilisation of a number of cores on a single SpiNNaker chip, increased progressively from 1 to 14. The plot outlines the DMA transfer rate for each core as they simultaneously access the shared resource \cite{multicoresystem}. It is clear from the figure that the read channel saturates just over 600 MB/s and the write channel adds around 300 MB/s on top of that, for a total aggregate bandwidth of 900 MB/s. Because memory reads and writes share the same network channel, an increase in the number of writes decreases the read bandwidth. Memory bandwidth, although saturated, is distributed fairly among all cores \cite{painkras}. 
 
 The progression of Core 6 on the plot shows that if the DMA controller is free, a single core can read from shared memory at 300 MB/s, but if such memory is being constantly accessed by other processors, each will only retrieve data at a rate of around 50 MB/s (6 times slower than doing so exclusively). This evaluation is important because it shows the limitation of all cores frequently accessing shared memory simultaneously, which is exactly the case of the SpiDB \textit{pull} and \textit{SELECT} queries.
 
-It is worth noting that the core's private memory (DTCM), although 2000 times smaller than SDRAM (64-KB vs 128-MB), is 50 times faster to access and does not suffer from concurrent access limitations, which makes it a strong candidate for the implementation of a \textit{cache} memory. This has not been yet implemented, but with appropriate synchronization it would highly reduce SDRAM access and reduce response times. On SpiDB another enhancement to minimise unnecessary SDRAM access is the use of a hash-table structure, in which the location of values inserted on the database is always known, avoiding a linear scan through the system.
+It is worth noting that the core's private memory (DTCM), although 2000 times smaller than SDRAM (64-KB vs 128-MB), is 50 times faster to access and does not suffer from concurrent access limitations, which makes it a strong candidate for the implementation of a \textit{cache} memory. This has not been yet implemented, but with appropriate synchronisation it would highly reduce SDRAM access and reduce response times. On SpiDB another enhancement to minimise unnecessary SDRAM access is the use of a hash-table structure, in which the location of values inserted on the database is always known, avoiding a linear scan through the system.

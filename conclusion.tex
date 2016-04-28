@@ -1,19 +1,25 @@
 \chapter{Conclusion}
 \label{cha:conclusion}
-SpiNNaker is a highly distributed hardware architecture originally designed to simulate the interaction between billions of neurons in the brain. This project involved making use of such hardware to build a Database Management System, namely SpiDB, with the aim of evaluating how SpiNNaker may perform under a general purpose environment, its strengths and weaknesses.
+SpiNNaker is a highly distributed hardware architecture originally designed to simulate the interaction between billions of neurons in the brain. As described in chapter \ref{cha:background}, the SpiNNaker hardware is composed of a grid of hundreds of processors with the ability to communicate over different protocols and collectively reach the solution to a problem.
 
-In the context of a general purpose application, as discussed on chapter \ref{cha:eval}, the main limitations outlined were:
+This project involved making use of such hardware to build a Database Management System, namely SpiDB, divided into a NoSQL Key-Value store and an SQL Relational Database. The implementation was tested in various ways in order to find the optimal solution for processing database queries on SpiNNaker, such as the use of both a \textit{naive} and \textit{hash} storage strategies, covered in chapter \ref{cha:development}.
+
+This project aims to explore SpiNNaker from a perspective it was not built for, which in this case is a database system. This allows benchmarking and evaluation of results which outline the architecture's strengths and weaknesses under a non-neuromorphic application. Such evaluation may be significant feedback for the current SpiNNaker research.
+
+In the context of a general purpose application, as discussed on chapter \ref{cha:eval}, the main SpiNNaker limitations demonstrated by this project were:
 \begin{itemize}
-\setlength\itemsep{-0.3em}
+\setlength\itemsep{-0.1em}
 	\item SDRAM bandwidth saturation with concurrent memory access
 	\item Central point of failure and slow-down with Ethernet communication
 	\item Frequent packet drops with bursts of SDP and P2P packets
 	\item Limited core private memory DTCM to store incoming packets and data
 \end{itemize}
 
-On the contrary, SpiNNaker has demostrated its strengths on:
+The design decisions and approaches proposed by me have shown themselves to not be able to fully overcome the communications unreliability issue and the central point of failure, but insights and analysis are provided for further improvements. The evaluation presented can be used as guidelines for the development of any general purpose application on SpiNNaker and even for neuromorphic applications themselves.
+
+SpiNNaker has also demonstrated strengths which a general purpose application can profit from:
 \begin{itemize}
-\setlength\itemsep{-0.3em}
+\setlength\itemsep{-0.1em}
 	\item High scalability on number of cores and boards when arranged as a tree structure
 	\item Low network latency for a large number of cores
 \end{itemize}
@@ -21,7 +27,7 @@ On the contrary, SpiNNaker has demostrated its strengths on:
 The project aim has been successfully reached and important achievements were made on the way.
 
 \section{Achievements}
-This year long project allowed me to not only build an application which may positively impact the SpiNNaker research, by tackling it with challanges it was not designed for, but also granted me with valuable achievements, both personal and professional:
+This year long project allowed me to not only build an application which may positively impact the SpiNNaker research, by tackling it with challenges it was not designed for, but also granted me with valuable achievements, both personal and professional:
 
 \begin{itemize}
 	\item Collaboration on an IEEE article publication, alongside Alan Stokes, Thomas Heinis and Yordan Chaparov, currently under pending approval, namely \textit{Exploring the Energy Efficiency of Neuromorphic Hardware for Data Management}.
@@ -41,7 +47,7 @@ The most significant features for future research I evaluate to be:
 
 These would certainly take full advantage of the SpiNNaker hardware for hosting a Database Management System, bringing useful feedback and value.
 
-SpiNNaker databases should also have the following features, sorted in decreasing order of importace given the project's aims:
+SpiNNaker databases should also have the following features, sorted in decreasing order of importance given the project's aims:
 
 \begin{itemize}
 	\item \textbf{Caching} and \textbf{indexing}: frequently accessed areas of shared SDRAM memory can be cached at the smaller but much faster private DTCM.

@@ -6,7 +6,7 @@ This chapter describes an architectural overview of the SpiNNaker research, hard
 \label{sec:spinn_arch}
 
 The basic building block of the SpiNNaker machine is the SpiNNaker Chip Multiprocessor (CMP), a custom designed globally asynchronous locally synchronous (GALS) system \cite{painkras} with 18 ARM968E-S processor nodes \cite{impacttraffic} (figure \ref{fig:chip_layout}). 
-The SpiNNaker chip contains two silicon dies: the SpiNNaker die itself and a 128-MByte SDRAM (Synchronous Dynamic Random Access Memory) die clocked at 133-MHz \cite{gals}, which is physically mounted on top of the SpiNNaker die and stitch-bonded to it (figure \ref{fig:spinn_dies}) \cite{spinnchip}. The SDRAM serves as local shared memory for the 18 cores within the chip, also utilized for memory based communication \cite{datasheet}. 
+The SpiNNaker chip contains two silicon dies: the SpiNNaker die itself and a 128-MByte SDRAM (Synchronous Dynamic Random Access Memory) die clocked at 133-MHz \cite{gals}, which is physically mounted on top of the SpiNNaker die and stitch-bonded to it (figure \ref{fig:spinn_dies}) \cite{spinnchip}. The SDRAM serves as local shared memory for the 18 cores within the chip, also utilised for memory based communication \cite{datasheet}. 
 
 \begin{figure}[h]
 \centering
@@ -49,12 +49,12 @@ Figure \ref{fig:4node} shows SpiNN-3, a 4 chip SpiNNaker board with 72 processor
 
 Cores on a SpiNNaker board exchange packets through wired connections over a large communication fabric. Each SpiNNaker chip is surrounded by a lightweight, packet-switched asynchronous communication infrastructure \cite{spinnchip}. Packet exchange can be used to transmit information initially private to a core and it is managed under the API's even driven architecture, thus incoming packets issue an interrupt on the receiving core, which is woken up from low-power mode. Data transfer and path routing between different chips is handled by an external processor, named the \textit{router}.
 
-There are currently 4 different communication protocols in the system, visualized in figure \ref{fig:comm_protocols}. It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsened if there is increased traffic in the communication fabric. Sending a large amount of packets simultaneously is likely to result on packet drops.
+There are currently 4 different communication protocols in the system, visualised in figure \ref{fig:comm_protocols}. It is worth noting that \textbf{none of these protocols guarantee successful delivery of data} and this effect is worsened if there is increased traffic in the communication fabric. Sending a large amount of packets simultaneously is likely to result on packet drops, which is a consequence of the early design decisions of SpiNNaker. In a neuromorphic environment missing spikes (electric signals between neurons in the brain) is common, thus not being a major concern of the hardware architecture, designed for neural network simulations. This results on a large issue when developing applications where high reliability is necessary, as later discussed in chapter \ref{cha:eval}.
 
 \begin{itemize}
 \item \textbf{Multicast (MC)}: The MC protocol, originally designed to simulate asynchronous neural spikes \cite{multicastpaper}, is used when a single source issues information to multiple destinations (one-to-many), as a fan-out topology \cite{overviewspinn}. The packet contains a 32 bit routing key, used by an external router process to carry out the delivery, and an optional 32 bit payload, both provided at the source.
 
-\item \textbf{Point-to-Point (P2P)}: P2P packets have a single source and a single destination core (one-to-one). Each packet contains a 16-bit source ID, destinarion ID and an optional 32-bit payload \cite{datasheet}.
+\item \textbf{Point-to-Point (P2P)}: P2P packets have a single source and a single destination core (one-to-one). Each packet contains a 16-bit source ID, destination ID and an optional 32-bit payload \cite{datasheet}.
 On top of this layer, the SpiNNaker Datagram Protocol (SDP) was designed to allow transfers of up to 256-bytes of data between two cores, by sending a sequence of P2P packets with payloads \cite{sdp}. SDP can be used to communicate to the \textit{host} machine, wrapped around a larger UDP packet.
 
 \item \textbf{Nearest-neighbour (NN)}: Under the NN protocol, packets issued at a chip will only be delivered to the monitor core on a physically adjacent node \cite{overviewspinn}. NN packets contain a 32-bit payload and a 32-bit address/operation field \cite{datasheet}.

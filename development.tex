@@ -1,4 +1,5 @@
 \chapter{Development}
+\label{cha:development}
 
 This chapter describes the development of my database application, SpiDB, from September 2015 to March 2016, involving planning, testing and implementation. The project is open-source, which can be found at
 \textit{https://github.com/SpiNNakerManchester/SpiNNakerGraphFrontEnd}.
@@ -18,7 +19,7 @@ The overall project was divided into two phases: developing a No-SQL Key-Value s
 \end{figure}
 
 \subsection{Requirements Analysis}
-The project plan involved analysing the importance of different requirements based on their relative difficulty and scope within the project aim. Modern database management systems have a broad range of complex requirements. Given limited resources, the following requirements were prioritized for this application:
+The project plan involved analysing the importance of different requirements based on their relative difficulty and scope within the project aim. Modern database management systems have a broad range of complex requirements. Given limited resources, the following requirements were prioritised for this application:
 
 \begin{itemize}
 	\item \textbf{Reliability}: User's queries must complete in a reasonable way. This means any internal errors, inconsistencies or communication failures should be handled from within the database system, avoiding unpredicted failures to the user. This is a difficult task given the unreliability of the SpiNNaker communication fabric, as discussed in section \ref{sec:comm_fabric}.
@@ -27,9 +28,9 @@ The project plan involved analysing the importance of different requirements bas
 	\item \textbf{Scalability}: The system must be able to handle many parallel queries and have enhanced performance when given more hardware resources, in this case processor count.	This is arguably the most important of all requirements, as the SpiNNaker team is currently focusing on building a large scale machine composed of 1,000,000 processing cores. If this application scales well, it will quickly be able to show the strengths and weaknesses of the machine.
 \end{itemize}
 
-These main requirements do not cover two of the four ACID (Atomicity, Consistency, Durability, Isolation) properties of a database: atomicity and consistency. Atomicity, although very important on a large commercial application, is extremely hard to achieve in a decentralized system, with the use of complex multi-core rollbacks, and falls out of the scope of this experimental project. Consistency is significant when ensuring data written to the database is valid according to constraints, triggers and cascades, which are originally non-existent in a reduced instruction data store and do not contribute to the project research.
+These main requirements do not cover two of the four ACID (Atomicity, Consistency, Durability, Isolation) properties of a database: atomicity and consistency. Atomicity, although very important on a large commercial application, is extremely hard to achieve in a decentralised system, with the use of complex multi-core rollbacks, and falls out of the scope of this experimental project. Consistency is significant when ensuring data written to the database is valid according to constraints, triggers and cascades, which are originally non-existent in a reduced instruction data store and do not contribute to the project research.
 
-Lastly another outstanding requirement not included in the plan was a strong security protocol. Data encryption and authorization have many advantages, but present themselves as unnecessary complexity for a small, private, experimental project.
+Lastly another outstanding requirement not included in the plan was a strong security protocol. Data encryption and authorisation have many advantages, but present themselves as unnecessary complexity for a small, private, experimental project.
 
 \subsection{Technologies}
 Part of the project plan involves research on the SpiNNaker hardware and software stack, extensively used on my project. Given the steep learning curve of a low level distributed system and event driven platform, on the 7\textsuperscript{th} of September 2015, I attended the \textit{5\textsuperscript{th} SpiNNaker Workshop}, where tens of researchers from around the globe gathered for a one week course on the SpiNNaker Project in Manchester. I was officially introduced to the team, whom I would learn from and work with for the rest of the year.
@@ -293,7 +294,7 @@ Internally the following steps occur:
 Complexity: linear to the size of the input, linear to database size.
  
 \subsection{User Interface} 
-Although a graphical user interface was not an essential part of the project plan, a simple one was created for the purposes of demonstration, data plotting and ease of visualization. By making use of the SpiDB API, the UI includes features to import \textit{sql} files, ping the board, issue concurrent queries, visualize previous queries, display result statistics and graphs. An example instance can be seen in figure \ref{fig:gui}.
+Although a graphical user interface was not an essential part of the project plan, a simple one was created for the purposes of demonstration, data plotting and ease of visualisation. By making use of the SpiDB API, the UI includes features to import \textit{sql} files, ping the board, issue concurrent queries, visualise previous queries, display result statistics and graphs. An example instance can be seen in figure \ref{fig:gui}.
 
 \begin{figure}
 \center
@@ -389,7 +390,7 @@ The SpiNNaker communication protocol can be unreliable, as packets are not guara
 
 Queries such as \textit{put} issue only one packet at a time, allowing an end-to-end acknowledgement without significant packet drops or performance costs. For this reason the \textit{put} query, alongside the SQL commands \textit{create} and \textit{insert} always expect a response, which contains timing information and a flag whether it was successful or not. The steps of running SpiDB queries can be revised in section \ref{sec:implementation}.
 
-On the other hand the \textit{pull} and \textit{select} commands issue multicast packets (one-to-many). This means for each query, a packet is sent to up to hundreds of codes, which SpiNNaker is particularly optimized for, but the opposite (many-to-one) is more difficult. Multiple cores sending \textit{SDP} packets to a single core results on a very large packet drop. Only a total of 4 of these packets arrive successfully, as it is the limit of \textit{SDP} channels per core. In the worst case, too many packets have also the capability of crashing the destination core.
+On the other hand the \textit{pull} and \textit{select} commands issue multicast packets (one-to-many). This means for each query, a packet is sent to up to hundreds of codes, which SpiNNaker is particularly optimised for, but the opposite (many-to-one) is more difficult. Multiple cores sending \textit{SDP} packets to a single core results on a very large packet drop. Only a total of 4 of these packets arrive successfully, as it is the limit of \textit{SDP} channels per core. In the worst case, too many packets have also the capability of crashing the destination core.
 This means when a packet has multiple destinations, acknowledgements would worsen the situation, as most of these would be dropped and it would highly increase traffic in the system, which itself is a reason for packet loss.
 
 This analysis has lead me to make the design decision of not using internal acknowledgements for every packet sent. In \textit{pull} queries, \textit{leaf} nodes only respond when they have found the specified key, which means there will be at most one acknowledgement. If the key is not found on the database, not a single \textit{leaf} core will respond, which can only be known externally with the use of a time-out.

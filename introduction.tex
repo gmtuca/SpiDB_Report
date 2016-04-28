@@ -11,9 +11,13 @@ This chapter describes a high level view of the SpiNNaker platform and its main 
 \section{Project Aim}
 \label{sec:aim}
 
-This research project involves making use of the SpiNNaker software stack and hardware infrastructure, both optimised for neural network simulations, in order to explore and evaluate its usability and performance as a general purpose platform. This has been achieved through the development of a distributed Key-Value store and a simple Relational Database Management System. 
-This project has grown to be the largest non-neuromorphic application now available as part of the SpiNNaker software API (SpiNNaker Software Stack).
+This research project involves making use of the SpiNNaker software stack and hardware infrastructure, both optimised for neural network simulations, in order to explore and evaluate its usability and performance as a general purpose platform. This has been achieved through the development of a distributed Key-Value store and a simple Relational Database Management System (DBMS). This open-source project has grown to be the \textit{largest non-neuromorphic application in the SpiNNaker API} (SpiNNaker Software Stack), available widely for further research.
 
-SpiNNaker was designed from the outset to support parallel execution of application code while ensuring energy efficiency. This appealed as an extraordinary opportunity to store and retrieve data in a fast, distributed way, under a database management system. This allows exploration of a broad range of ideas outside of the initial scope of SpiNNaker, testing some of its capabilities and limitations against a non-neuromorphic application.
+SpiNNaker was designed from the outset to support parallel execution of application code while ensuring energy efficiency \cite{discrete}. This appealed as an extraordinary opportunity to store and retrieve data in a fast, distributed way, under a DBMS. This allows exploration of a broad range of ideas outside of the initial scope of SpiNNaker, testing some of its capabilities and limitations against a non-neuromorphic application, bringing useful feedback to the team.
 
-In addition to usability testing, an important objective is to gather performance benchmarks for this DBMS, allowing analysis which can provide insights for design decisions to the current architecture and possibly influencing on the next generation of the SpiNNaker chip. This data can also be used to further enhance my application in the future, as it is owned by the SpiNNaker team itself.
+Given such opportunities, the main aims of this project are:
+
+\begin{itemize}
+	\item \textbf{Testing usability} of SpiNNaker as a general purpose platform, exploring its strengths and weaknesses under an environment it was not originally designed for.
+	\item Performing \textbf{application benchmarks}, allowing analysis which can provide insights for design decisions to the current architecture and possibly influence on the structure of the next generations of SpiNNaker chips.
+\end{itemize}
