@@ -21,27 +21,33 @@ On the contrary, SpiNNaker has demostrated its strengths on:
 The project aim has been successfully reached and important achievements were made on the way.
 
 \section{Achievements}
-This year long project allowed me to not only build an application which may positively impact the SpiNNaker research, but also granted me with valuable achievements, both personal and professional:
+This year long project allowed me to not only build an application which may positively impact the SpiNNaker research, by tackling it with challanges it was not designed for, but also granted me with valuable achievements, both personal and professional:
 
 \begin{itemize}
 	\item Collaboration on an IEEE article publication, alongside Alan Stokes, Thomas Heinis and Yordan Chaparov, currently under pending approval, namely \textit{Exploring the Energy Efficiency of Neuromorphic Hardware for Data Management}.
-	\item Opportunity mentoring Yordan Chaparov, a student at Imperial College London currently developing a SpiNNaker data storage program.
-	\item Experience discussing distributed database concepts with Thomas Heinis, a professor of Databases at Imperial College London, who agreed to support me on Ph.D. application to such university.
-	\item Participation on a large, international, research project on emerging hardware.
+	\item Contribution to a large, international, research project on emerging hardware.
 	\item Enhanced knowledge on low-level C and Python, languages which I previously had very little experience with.
 \end{itemize}
 
 \section{Future work}
-This project has been the tip of the iceberg of what a fully-functional SpiNNaker database management system can be. All code written by me is now part of the official open-source SpiNNaker Software Stack. This means SpiDB is likely to expand in the future or serve as an example application running on SpiNNaker, accessible by researchers and developers around the globe.
+This project has been the tip of the iceberg of what a fully-functional SpiNNaker database management system can be. All code written by me is now part of the official open-source SpiNNaker Software Stack. This means SpiDB is likely to expand in the future or serve as an example application running on SpiNNaker, accessible by researchers and developers around the globe. A large amount of my code is being currently used by the Imperial College London professor Thomas Heinis and the student Yordan Chaparov, who plan on improving it while decreasing power consumption. The topic of \textit{Databases on SpiNNaker} has recently had great attention within the SpiNNaker team, which may result on it becoming a full Ph.D research.
 
-These are some features which can be implemented or improved in the future:
+The most significant features for future research I evaluate to be:
+
+\begin{itemize}
+	\item Improving \textbf{scalability} and testing on the large scale \textit{million core machine}.
+	\item Enhancing \textbf{reliability} and increasing \textbf{query sizes}, perhaps by implementing a protocol on top of the SDP and MC layer. As of now packets are limited to 256-bytes, with unreliability during busy times.
+\end{itemize}
+
+These would certainly take full advantage of the SpiNNaker hardware for hosting a Database Management System, bringing useful feedback and value.
+
+SpiNNaker databases should also have the following features, sorted in decreasing order of importace given the project's aims:
 
 \begin{itemize}
 	\item \textbf{Caching} and \textbf{indexing}: frequently accessed areas of shared SDRAM memory can be cached at the smaller but much faster private DTCM.
-	\item \textbf{Security} and \textbf{multi-user access}: different sections of the database can have restricted access through credentials checking.
-	\item \textbf{Scalability testing} on the large scale \textit{million core machine}.
-	\item An application \textbf{server} allowing queries to be requested over the internet from different locations.
-	\item Improve \textbf{reliability} and increase \textbf{query sizes}, perhaps by implementing a protocol on top of the SDP and MC layer. As of now packets are limited to 256-bytes, with unreliability during busy times.
-	\item \textbf{Self balancing} during idle times. While no queries are being executed, cores could distribute their contents in a balanced way for faster retrieval. Indexing or other pre-processing could also be executed on the meantime.
+	\item \textbf{Self balancing} during idle times. While no queries are being executed, cores could distribute their contents in a balanced way for faster retrieval. Indexing or other pre-processing could also be executed on the meantime.	
 	\item \textbf{Additional operations} supporting table merges, triggers and aggregations.
+	\item \textbf{Security} and \textbf{multi-user access}: different sections of the database can have restricted access through credentials checking.
+	\item An application \textbf{server} allowing queries to be requested over the internet from different locations.
+	\item A user-friendly, powerful \textbf{Graphical User Interface}
 \end{itemize}

@@ -117,19 +117,19 @@ In this case \textit{SpiDBCommands} is set to the constant representing the put 
 \begin{minipage}{.32\textwidth}
   \centering
   \includegraphics[width=1\linewidth, natwidth=794, natheight=1123]{images/put1.png}
-  \captionof{figure}{Host to root packet}
+  \captionof{figure}{Query from host}
   \label{fig:host-root}
 \end{minipage}
 \begin{minipage}{.32\textwidth}
   \centering
   \includegraphics[width=1\linewidth, natwidth=794, natheight=1123]{images/put2.png}
-  \captionof{figure}{Root to leaf packet}
+  \captionof{figure}{Root to leaf SDP}
   \label{fig:root-leaf}
 \end{minipage}
 \begin{minipage}{.32\textwidth}
   \centering
   \includegraphics[width=1\linewidth, natwidth=794, natheight=1123]{images/put3.png}
-  \captionof{figure}{Leaf to host packet}
+  \captionof{figure}{Response to host}
   \label{fig:leaf-host}
 \end{minipage}
 \end{figure}
@@ -147,7 +147,7 @@ pull 123
 Internally the following steps occur:
 \begin{enumerate}
 \item User issues query of format \textit{pull "key"} on host machine.
-\item Query and metadata are converted into a byte array with the following format, transferred via UDP over Ethernet to the board %(figure \ref{fig:host-root}).
+\item Query and metadata are converted into a byte array with the following format, transferred via UDP over Ethernet to the board.
 \lstinputlisting[language=C]{code/pullQuery.c}
 Where \textit{SpiDBCommands} represents the pull operation constant, \textit{id} is the query, \textit{info} contains bit encoding of the size and type of the given key, \textit{k} contains the key itself encoded as a byte-array.
 \item Packet triggers interrupt on \textit{root} core, via SDP, and is decoded.
@@ -283,7 +283,7 @@ SELECT lastname FROM People WHERE name = lastname;
    
 Internally the following steps occur:
 \begin{enumerate}
-\item User issues query of format \textit{SELECT *\textbar fiel1, ... FROM table WHERE condition}, which is converted and sent as a single packet to the SpiNNaker board.
+\item User issues query of format \textit{SELECT fiel1, field2, ... FROM table WHERE condition}, which is converted and sent as a single packet to the SpiNNaker board.
 \item Upon receival, \textit{root} node issues a multicast packet to every \textit{leaf} node on the board, requesting search for all rows which match the WHERE criteria.
 \item Every \textit{leaf} node linearly checks appropriate condition and forwards matching column-value pairs on packets to their appropriately assigned \textit{branch} nodes.
 \item \textit{branch} nodes aggregate fields if requested, controls speed of execution and sends packet to host with such entry definition.
@@ -333,7 +333,7 @@ PULL & "a new key" & & failure & key does not exist \\
 \label{table:tests}
 \end{table}
 
-Real-time debugging on the SpiNNaker board is relatively hard, but luckily the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool named \textit{ybug} (\textit{https://github.com/SpiNNakerManchester/ybug}), also developed by the team, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality \cite{ybug}. On the \textit{host} Python code, debugging was done using the Pycharm IDE runtime tools.
+Real-time debugging on the SpiNNaker board is relatively hard, but luckily the API provides ways to log messages in each core's private data memory, which can be read by an external process upon execution of the program. Debugging was performed with a tool developed by the team, named \textit{ybug}, available at \textit{https://github.com/SpiNNakerManchester/ybug}, which allows core status checking, uploading binaries, reading logs and memory content, among other functionality \cite{ybug}. On the \textit{host} Python code, debugging was done using the PyCharm IDE runtime tools.
 
 \begin{figure}
   \centering
