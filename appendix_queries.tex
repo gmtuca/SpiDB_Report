@@ -1,0 +1,27 @@
+\chapter{Queries}
+
+This chapter contains code snippets of the main SpiDB operations.
+
+\section{Query formats}
+\label{sec:appendix-queries}
+This section contains the query structs and enums used for internal and external communication of the database. The two supported variable types are: \textit{int} and \textit{char[]} (string).
+
+\lstinputlisting[language=C]{code/types.c}
+
+\section{Key-Value Database}
+\subsection{Definitions}
+\lstinputlisting[language=C]{code/db_type_kv.c}
+
+\subsection{PUT}
+\lstinputlisting[language=C]{code/put.c}
+
+\subsection{PULL}
+\lstinputlisting[language=C]{code/pull.c}
+
+\section{Relational Database}
+\subsection{Definitions}
+\lstinputlisting[language=C]{code/db_type_relational.c}
+
+\subsection{Queries}
+Code containing the SpiDB SQL relational database queries can be found at \\
+\textit{https://github.com/SpiNNakerManchester/SpiNNakerGraphFrontEnd/tree/master/examples/spiDB}.

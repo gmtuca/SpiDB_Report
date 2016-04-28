@@ -18,3 +18,17 @@ typedef enum spiDBcommand {
 
     PING
 } spiDBcommand;
+
+typedef struct Response{
+  id_t          id;
+  spiDBcommand  cmd;
+
+  bool          success;
+  uint8_t       x;
+  uint8_t       y;
+  uint8_t       p;
+
+  uchar         pad[3];
+
+  uchar         data[256];
+} Response;
