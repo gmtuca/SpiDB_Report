@@ -7,38 +7,38 @@
 
   \item[Branch] SpiDB application processor in charge of merging, aggregating database entries and maintaining a tree structure of the query plan
 
-  \item[Data Tightly Coupled Memory (DTCM)] 62-KB of memory dedicated for data storage and program stack, private to each processor
+  \item[Data Tightly Coupled Memory (DTCM)] 62-KB of volatile memory dedicated for data storage and program stack, private to each processor
   
   \item[Database Management System (DBMS)] Suite of programs which manage large sets of data, organising the structure and retrieval of database entries \cite{dbmsdef}.
    
   \item[Fixed-Route (FR)] Communication protocol with custom routing through chips   
-    
+
   \item[Host] User's machine connected to SpiNNaker board over Ethernet communication    
-    
-  \item[Instruction Tightly Coupled Memory (ITCM)] 32-KB of memory dedicated for machine instructions, private to each processor    
-    
+
+  \item[Instruction Tightly Coupled Memory (ITCM)] 32-KB of volatile memory dedicated for machine instructions, private to each processor    
+
   \item[Leaf] SpiDB application processor in charge of processing storage and retrieval of database entries in SDRAM    
-    
+
   \item[Million-core machine] System composed of \texttildelow 1200 SpiNN-4 machines (1,000,000 ARM processors)   
-  
+
   \item[Multicast (MC)] Communication protocol of one source, multiple destinations    
 
   \item[Nearest Neighbour (NN)] Communication protocol of one source and destination physically adjacent to it
 
   \item[Point-to-Point (P2P)] Communication protocol of one source, one destination    
-  
+
   \item[Root] SpiDB application processor in charge of communicating with host and forwarding database queries to other processors
-  
+
   \item[SpiNNaker Datagram Protocol (SDP)] Communication protocol built on top of P2P to allow larger transfers of data between two cores in the system  
-    
-  \item[SpiDB (SpiNNaker Database)] Experimental Database Management System on SpiNNaker, developed by me as part of the third year project
-  
+
+  \item[SpiDB (SpiNNaker Database)] Database Management System on SpiNNaker, developed by me as part of the third year project
+
   \item[SpiNNaker (Spiking Neural Network Architecture)] Massively parallel computer system composed of a large grid of ARM cores designed to model billions of neurons in biological real time \cite{painkras}.
-  
+
   \item[SpiNNaker Chip Multiprocessor (CMP)] Custom chip composed of 18 ARM processors and SDRAM  
-  
-  \item[Synchronous Dynamic Random Access Memory (SDRAM)] 128-MB of dynamic memory, stitch bounded to each SpiNNaker chip, accessible from all cores within it
-  
+
+  \item[Synchronous Dynamic Random Access Memory (SDRAM)] 128-MB of volatile, dynamic memory, stitch bounded to each SpiNNaker chip, accessible from all cores within it
+
   \item[SpiNN-3] System composed of 4 SpiNNaker chips (72 ARM processors)
   \item[SpiNN-4] System composed of 48 SpiNNaker chips (864 ARM processors)  
 

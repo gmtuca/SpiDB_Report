@@ -1,4 +1,4 @@
-#define MULTIPLE_OF_4(n) ((n+3)&(!3))
+#define MULTIPLE_OF_4(n) (((n+3)/4)*4)
 #define try(cond) do { if (!cond) return false; } while (0)
 
 address_t append(address_t* address, void* data, size_t size_bytes){

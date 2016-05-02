@@ -2,10 +2,10 @@
 \label{cha:eval}
 This research project has among its main aims the evaluation of results, described in this chapter. It is important to analyse how this general purpose application performs under the SpiNNaker environments and what architectural limitations it faces, which is useful feedback to the team. The chapter outlines also performance benchmarks of SpiDB in comparison with other database systems and how it can be improved.
 
-\section{Reliability \& transmission rate}
+\section{Reliability \& Transmission Rate}
 \label{sec:eval_comm_rel}
 
-According to my experiments, sending SDP packets immediately between two cores results on a very large packet drop ration. Without explicit delay/wait between the transmission of packets, the number of successful deliveries is only about 10\% of those sent for a large number of packets. This effect is strongly reduced by the addition of a small delay of 5-10$\mu$s, which guarantees over 99\% successful deliveries, as can be seen on table \ref{table:sdp_deliveries}. The table also shows that long intervals, greater than 10$\mu$s, are mostly redundant, as they do not decrease packet loss significantly, but tragically reduce throughput.
+According to my experiments, sending bursts of SDP packets immediately between two cores results on a very large packet drop ration. Without explicit delay/wait between the transmission of packets, the number of successful deliveries is only about 10\% of those sent for a large number of packets. This effect is strongly reduced by the addition of a small delay of 5-10$\mu$s, which guarantees over 99\% successful deliveries, as can be seen on table \ref{table:sdp_deliveries}. The table also shows that long intervals, greater than 10$\mu$s, are mostly redundant, as they do not decrease packet loss significantly, but tragically reduce throughput.
 
 Upon experimenting, I found that sending a large amount of consecutive, immediate packets (at least 1,000,000) has a chance of consequently crashing the destination core or causing it to reach the erroneous watchdog state (WDOG), meaning it cannot respond to commands.
 

@@ -1,6 +1,5 @@
 \chapter{Development}
 \label{cha:development}
-
 This chapter describes the development of my database application, SpiDB, from September 2015 to March 2016, involving planning, testing and implementation. The project is open-source, which can be found at
 \textit{https://github.com/SpiNNakerManchester/SpiNNakerGraphFrontEnd}.
 
@@ -28,7 +27,7 @@ The project plan involved analysing the importance of different requirements bas
 	\item \textbf{Scalability}: The system must be able to handle many parallel queries and have enhanced performance when given more hardware resources, in this case processor count.	This is arguably the most important of all requirements, as the SpiNNaker team is currently focusing on building a large scale machine composed of 1,000,000 processing cores. If this application scales well, it will quickly be able to show the strengths and weaknesses of the machine.
 \end{itemize}
 
-These main requirements do not cover two of the four ACID (Atomicity, Consistency, Durability, Isolation) properties of a database: atomicity and consistency. Atomicity, although very important on a large commercial application, is extremely hard to achieve in a decentralised system, with the use of complex multi-core rollbacks, and falls out of the scope of this experimental project. Consistency is significant when ensuring data written to the database is valid according to constraints, triggers and cascades, which are originally non-existent in a reduced instruction data store and do not contribute to the project research.
+These main requirements do not cover two of the four ACID (Atomicity, Consistency, Durability, Isolation) properties of a database: Atomicity and Consistency. Atomicity, although very important on a large commercial application, is extremely hard to achieve in a decentralised system, with the use of complex multi-core rollbacks, and falls out of the scope of this experimental project. Consistency is significant when ensuring data written to the database is valid according to constraints, triggers and cascades, which are originally non-existent in a reduced instruction data store and do not contribute to the project research.
 
 Lastly another outstanding requirement not included in the plan was a strong security protocol. Data encryption and authorisation have many advantages, but present themselves as unnecessary complexity for a small, private, experimental project.
 
@@ -48,8 +47,8 @@ Internally, I designed SpiDB to have a hierarchical tree structure architecture,
 
 The following binaries run on different cores on the chip, each with a specific role:
 \begin{itemize}
-	\item \textbf{root}: Each chip contains a single \textit{root} node, which handles incoming packets from \textit{host} by redirecting them to \textit{branch} and \textit{leaf} nodes, in an intelligent way, for parallel processing. Thus it reads user queries and manages load balancing throughout the board.
-	\item \textbf{branch}: The middle layer is composed of 4 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core.
+	\item \textbf{root}: Each chip contains a single \textit{root} node, which handles incoming packets from \textit{host} (user's computer) by redirecting them to \textit{branch} and \textit{leaf} nodes, in an intelligent way, for parallel processing. Thus it reads user queries and manages load balancing throughout the board.
+	\item \textbf{branch}: The middle layer is composed of 3 \textit{branch} cores in charge of aggregating data returned by \textit{leaf} nodes, serving also as "capacitors", slowing down excessive queries which may overload a destination core.
 	\item \textbf{leaf}: The user queries are finally processed by 12 \textit{leaf} nodes per chip, with the aim of storing and retrieving database entries (Key-Value pairs or table rows) on shared memory, unlike other nodes which handle mostly communications.
 \end{itemize}
 	These roles can be visualised on figures \ref{fig:tree} and \ref{fig:tree-chip}.
@@ -60,7 +59,7 @@ The following binaries run on different cores on the chip, each with a specific 
 \centering
 \begin{minipage}{1\textwidth}
   \centering
-  \includegraphics[width=0.9\linewidth, natwidth=618, natheight=120]{images/tree.png}
+  \includegraphics[width=0.9\linewidth, natwidth=471, natheight=114]{images/tree.png}
   \captionof{figure}{SpiDB tree structure}
   \label{fig:tree}
 \end{minipage}
@@ -222,7 +221,7 @@ Algorithms \ref{alg:root} and \ref{alg:leaf} show a high level simplification of
 \end{algorithm}
 
 \subsection{Relational Database}
-The second half of the project involves developing an SQL-based distributed database on top of the Key-Value store layer. Entries are stored in a structured way, bounded by the definition of tables. In this RDMS users can create tables with different fields, insert values and retrieve them with given conditions. This section describes in detail the internal processing of the \textit{create}, \textit{insert} and \textit{select} queries. 
+The second half of the project involves developing an SQL-based distributed database on top of the Key-Value store layer. Entries are stored in a structured way, bounded by the definition of tables. In this system users can create tables with different fields, insert values and retrieve them with given conditions. This section describes in detail the internal processing of the \textit{create}, \textit{insert} and \textit{select} queries. 
 
 \subsubsection{CREATE}
 In SpiDB, the \textit{create} operation is used to generate a table definition in the SpiNNaker hardware. Data can only be inserted into the database if a corresponding table exists. This query has as parameters the table name, field names and their types (\textit{int} or \textit{string}).
@@ -285,7 +284,7 @@ SELECT lastname FROM People WHERE name = lastname;
 Internally the following steps occur:
 \begin{enumerate}
 \item User issues query of format \textit{SELECT fiel1, field2, ... FROM table WHERE condition}, which is converted and sent as a single packet to the SpiNNaker board.
-\item Upon receival, \textit{root} node issues a multicast packet to every \textit{leaf} node on the board, requesting search for all rows which match the WHERE criteria.
+\item Upon receival, \textit{root} node issues a multicast packet to every \textit{leaf} node on the board, requesting search for all rows which match the \textit{WHERE} criteria.
 \item Every \textit{leaf} node linearly checks appropriate condition and forwards matching column-value pairs on packets to their appropriately assigned \textit{branch} nodes.
 \item \textit{branch} nodes aggregate fields if requested, controls speed of execution and sends packet to host with such entry definition.
 \item User receives an arbitrary amount of entries, displayed as a table of results.
@@ -304,8 +303,9 @@ Although a graphical user interface was not an essential part of the project pla
 \end{figure}
 
 \section{Testing and Debugging}
-I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start. Running tests can be seen in figure \ref{fig:testing}. Testing and development was done from the bottom up, starting from internal memory management, core communication and finally the user interface and host communication.
-Testing involved initially a number of insert queries with different types and sizes. Given the SpiNNaker architecture is word aligned, it was important to test boundaries along data sizes along multiples of 4 bytes. Examples of tests run can be seen on table \ref{table:tests}.
+I started the project with a Test-Driven Development approach, writing Python tests with the \textit{unittest} module and C assertions with part of the SpiNNaker API module \textit{debug.h} and my own code. This allowed high reliability from the start. Running tests can be seen in figure \ref{fig:testing}.
+
+Testing and development was done from the bottom up, starting from internal memory management, core communication and finally the user interface and host communication. Given the SpiNNaker architecture is word aligned, it was important to test boundaries of data sizes along multiples of 4 bytes. Examples of tests run can be seen on table \ref{table:tests}.
 Both the Key-Value store and the SQL management systems were also tested for their performance and scalability, running over 100,000 simultaneous incoming queries with real data pulled from a modern English vocabulary. The results from these experiments can be read on chapter \ref{cha:eval}.
 
 \begin{table}
@@ -390,7 +390,7 @@ The SpiNNaker communication protocol can be unreliable, as packets are not guara
 
 Queries such as \textit{put} issue only one packet at a time, allowing an end-to-end acknowledgement without significant packet drops or performance costs. For this reason the \textit{put} query, alongside the SQL commands \textit{create} and \textit{insert} always expect a response, which contains timing information and a flag whether it was successful or not. The steps of running SpiDB queries can be revised in section \ref{sec:implementation}.
 
-On the other hand the \textit{pull} and \textit{select} commands issue multicast packets (one-to-many). This means for each query, a packet is sent to up to hundreds of codes, which SpiNNaker is particularly optimised for, but the opposite (many-to-one) is more difficult. Multiple cores sending \textit{SDP} packets to a single core results on a very large packet drop. Only a total of 4 of these packets arrive successfully, as it is the limit of \textit{SDP} channels per core. In the worst case, too many packets have also the capability of crashing the destination core.
+On the other hand the \textit{pull} and \textit{select} commands issue multicast packets (one-to-many). This means for each query, a packet is sent to up to hundreds of codes, which SpiNNaker is particularly optimised for, but the opposite (many-to-one) is more difficult. Multiple cores sending \textit{SDP} packets to a single core results on a very large packet drop. Only a total of 4 of these packets arrive successfully, as it is the limit of \textit{SDP} channels per core. In the worst case, too many packets have also the capability of crashing the destination processor.
 This means when a packet has multiple destinations, acknowledgements would worsen the situation, as most of these would be dropped and it would highly increase traffic in the system, which itself is a reason for packet loss.
 
 This analysis has lead me to make the design decision of not using internal acknowledgements for every packet sent. In \textit{pull} queries, \textit{leaf} nodes only respond when they have found the specified key, which means there will be at most one acknowledgement. If the key is not found on the database, not a single \textit{leaf} core will respond, which can only be known externally with the use of a time-out.

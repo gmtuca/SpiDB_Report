@@ -42,6 +42,11 @@
 
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 
+\usepackage{datetime}
+
+\newdateformat{monthyeardate}{%
+  \monthname[\THEMONTH] \THEYEAR}
+
 \begin{document}
 
 \include{frontpage}

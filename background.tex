@@ -1,6 +1,6 @@
 \chapter{Background}
 \label{cha:background}
-This chapter describes an architectural overview of the SpiNNaker research, hardware specifications and multicore communication used on my database project.
+This chapter describes an architectural overview of the SpiNNaker research, hardware specifications and multi-core communication used on my database project.
 
 \section{SpiNNaker Architecture}
 \label{sec:spinn_arch}
@@ -44,7 +44,7 @@ Figure \ref{fig:4node} shows SpiNN-3, a 4 chip SpiNNaker board with 72 processor
 \end{minipage}
 \end{figure}
 
-\section{SpiNNaker Communication fabric}
+\section{SpiNNaker Communication Fabric}
 \label{sec:comm_fabric}
 
 Cores on a SpiNNaker board exchange packets through wired connections over a large communication fabric. Each SpiNNaker chip is surrounded by a lightweight, packet-switched asynchronous communication infrastructure \cite{spinnchip}. Packet exchange can be used to transmit information initially private to a core and it is managed under the API's even driven architecture, thus incoming packets issue an interrupt on the receiving core, which is woken up from low-power mode. Data transfer and path routing between different chips is handled by an external processor, named the \textit{router}.
@@ -64,7 +64,7 @@ On top of this layer, the SpiNNaker Datagram Protocol (SDP) was designed to allo
 
 \begin{figure}
   \centering
-  \includegraphics[width=1\linewidth, natwidth=578, natheight=420]{images/packet_types.png}
+  \includegraphics[width=1\linewidth, natwidth=621, natheight=454]{images/packet_types.png}
   \captionof{figure}{SpiNNaker communication protocols}
   \label{fig:comm_protocols}
 \end{figure}
